@@ -11,6 +11,7 @@ import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { HeartRateChart } from '@/components/heart-rate-chart';
 import { BloodPressureChart } from '@/components/blood-pressure-chart';
+import { Spo2Chart } from '@/components/spo2-chart';
 
 const heartRateData = [
   { date: '2023-01-01', bpm: 72 },
@@ -30,6 +31,16 @@ const bloodPressureData = [
   { date: '2023-01-05', systolic: 123, diastolic: 80 },
   { date: '2023-01-06', systolic: 121, diastolic: 78 },
   { date: '2023-01-07', systolic: 119, diastolic: 77 },
+];
+
+const spo2Data = [
+  { date: '2023-01-01', percentage: 98 },
+  { date: '2023-01-02', percentage: 97 },
+  { date: '2023-01-03', percentage: 99 },
+  { date: '2023-01-04', percentage: 98 },
+  { date: '2023-01-05', percentage: 97 },
+  { date: '2023-01-06', percentage: 98 },
+  { date: '2023-01-07', percentage: 99 },
 ];
 
 export default function VitalsHistoryPage() {
@@ -55,6 +66,15 @@ export default function VitalsHistoryPage() {
         </CardHeader>
         <CardContent>
           <HeartRateChart data={heartRateData} />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>SpO2 Levels</CardTitle>
+          <CardDescription>Oxygen Saturation (%)</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Spo2Chart data={spo2Data} />
         </CardContent>
       </Card>
       <Card>

@@ -1,4 +1,4 @@
-# **App Name**: ElderTrack
+# **App Name**: AlertaVital
 
 ## Core Features:
 

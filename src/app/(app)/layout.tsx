@@ -23,7 +23,7 @@ export default function AppLayout({
         <SidebarHeader>
           <div className="flex items-center gap-2 p-2">
             <Logo className="size-8 shrink-0 text-primary" />
-            <span className="text-lg font-semibold">ElderTrack</span>
+            <span className="text-lg font-semibold">AlertaVital</span>
           </div>
         </SidebarHeader>
         <SidebarContent>

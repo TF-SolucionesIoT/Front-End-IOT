@@ -16,7 +16,7 @@ export default function LoginPage() {
     <Card className="mx-auto w-full max-w-sm">
       <CardHeader className="space-y-2 text-center">
         <Logo className="mx-auto h-12 w-12 text-primary" />
-        <CardTitle className="text-2xl">Welcome to ElderTrack</CardTitle>
+        <CardTitle className="text-2xl">Welcome to AlertaVital</CardTitle>
         <CardDescription>
           Enter your email below to login to your account
         </CardDescription>

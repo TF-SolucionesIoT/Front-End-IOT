@@ -37,7 +37,7 @@ export async function smartAlertingTool(input: SmartAlertingToolInput): Promise<
 const prompt = ai.definePrompt({
   name: 'smartAlertingToolPrompt',
   input: {schema: SmartAlertingToolInputSchema},
-  output: {schema: SmartAlertingToolOutputSchema},
+  output: {schema: SmartAlertingToolOutputSchema, format: 'json'},
   prompt: `You are an AI assistant specialized in analyzing patient vital signs and predicting potential health risks.
 
 You will receive the patient's vital signs data, predefined thresholds, and will analyze this information to determine if an alert is needed.
@@ -45,18 +45,13 @@ You will receive the patient's vital signs data, predefined thresholds, and will
 Based on the analysis, you will generate an alert message and assign a risk level (low, medium, or high).
 
 Vitals Data:
-{{#each vitalsData}}
-  - Timestamp: {{ts}}, Type: {{type}}, Value: {{value}}
-{{/each}}
+{{{jsonStringify vitalsData}}}
 
-Predefined Thresholds: {{JSONstringify predefinedThresholds}}
+Predefined Thresholds: {{{jsonStringify predefinedThresholds}}}
 
 Determine if an alert is needed based on anomalies or concerning patterns in the vital signs data, considering the predefined thresholds.
 
-Output:
-Alert Needed: {{alertNeeded}}
-Alert Message: {{alertMessage}}
-Risk Level: {{riskLevel}}`,
+Provide your response as a JSON object that conforms to the specified output schema.`,
 });
 
 const smartAlertingToolFlow = ai.defineFlow(

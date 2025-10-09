@@ -78,7 +78,7 @@ export default function DashboardPage() {
             </p>
           </CardContent>
           <CardFooter className="p-0">
-             <VitalsChart data={vitalsData.heartRate} dataKey="heartRate" color="var(--chart-1)" />
+             <VitalsChart data={vitalsData.heartRate} dataKey="value" color="var(--chart-1)" />
           </CardFooter>
         </Card>
         <Card className="shadow-card">
@@ -93,7 +93,7 @@ export default function DashboardPage() {
             </p>
           </CardContent>
           <CardFooter className="p-0">
-             <VitalsChart data={vitalsData.spo2} dataKey="spo2" color="var(--chart-2)" />
+             <VitalsChart data={vitalsData.spo2} dataKey="value" color="var(--chart-2)" />
           </CardFooter>
         </Card>
         <Card className="shadow-card">
@@ -108,7 +108,7 @@ export default function DashboardPage() {
             </p>
           </CardContent>
            <CardFooter className="p-0">
-             <VitalsChart data={vitalsData.bloodPressure} dataKey="bloodPressure" color="var(--chart-3)" />
+             <VitalsChart data={vitalsData.bloodPressure} dataKey="value" color="var(--chart-3)" />
           </CardFooter>
         </Card>
       </div>

@@ -7,6 +7,7 @@ import {
   Pill,
   Users,
   Settings,
+  History,
 } from 'lucide-react';
 import {
   SidebarMenu,
@@ -22,6 +23,7 @@ const links = [
   { href: '/emergencies', label: 'Emergencies', icon: Siren },
   { href: '/treatments', label: 'Treatments', icon: Pill },
   { href: '/contacts', label: 'Contacts', icon: Users },
+  { href: '/alterations', label: 'Alterations', icon: History },
   { href: '/settings/profile', label: 'Settings', icon: Settings },
 ];
 

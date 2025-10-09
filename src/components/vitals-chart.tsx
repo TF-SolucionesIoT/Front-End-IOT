@@ -1,20 +1,26 @@
-"use client";
+'use client';
 
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart";
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
-import type { ChartConfig } from "@/components/ui/chart";
+} from '@/components/ui/chart';
+import { Area, AreaChart, Bar, BarChart } from 'recharts';
+import type { ChartConfig } from '@/components/ui/chart';
 
 type VitalsChartProps = {
-  data: { month: string; value: number }[];
+  data: any[];
   dataKey: string;
   color: string;
+  chartType: 'area' | 'bar';
 };
 
-export function VitalsChart({ data, dataKey, color }: VitalsChartProps) {
+export function VitalsChart({
+  data,
+  dataKey,
+  color,
+  chartType,
+}: VitalsChartProps) {
   const chartConfig = {
     [dataKey]: {
       label: dataKey,
@@ -22,9 +28,12 @@ export function VitalsChart({ data, dataKey, color }: VitalsChartProps) {
     },
   } satisfies ChartConfig;
 
+  const ChartComponent = chartType === 'area' ? AreaChart : BarChart;
+  const ChartPrimitive = chartType === 'area' ? Area : Bar;
+
   return (
     <ChartContainer config={chartConfig} className="h-[50px] w-full">
-      <AreaChart
+      <ChartComponent
         accessibilityLayer
         data={data}
         margin={{
@@ -48,10 +57,12 @@ export function VitalsChart({ data, dataKey, color }: VitalsChartProps) {
             />
           </linearGradient>
         </defs>
-        <Area
-          dataKey="value"
+        <ChartPrimitive
+          dataKey={dataKey}
           type="natural"
-          fill={`url(#fill-${dataKey})`}
+          fill={
+            chartType === 'area' ? `url(#fill-${dataKey})` : `hsl(${color})`
+          }
           stroke={`hsl(${color})`}
           stackId="a"
         />
@@ -59,7 +70,7 @@ export function VitalsChart({ data, dataKey, color }: VitalsChartProps) {
           cursor={false}
           content={<ChartTooltipContent hideLabel hideIndicator />}
         />
-      </AreaChart>
+      </ChartComponent>
     </ChartContainer>
   );
 }

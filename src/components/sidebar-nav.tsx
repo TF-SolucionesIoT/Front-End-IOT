@@ -24,6 +24,7 @@ const links = [
   { href: '/treatments', label: 'Treatments', icon: Pill },
   { href: '/contacts', label: 'Contacts', icon: Users },
   { href: '/alterations', label: 'Alterations', icon: History },
+  { href: '/symptoms', label: 'Symptoms', icon: History },
   { href: '/settings/profile', label: 'Settings', icon: Settings },
 ];
 

@@ -68,8 +68,9 @@ export default {
       },
       borderRadius: {
         lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+        md: 'calc(var(--radius) - 4px)', // 6px
+        sm: 'calc(var(--radius) - 4px)', // 6px
+        pill: '9999px',
       },
       keyframes: {
         'accordion-down': {
@@ -92,6 +93,10 @@ export default {
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+      },
+      boxShadow: {
+        card: '0 8px 20px rgba(15, 23, 42, 0.06)',
+        'focus-ring': '0 0 0 3px rgba(10, 163, 163, 0.35)',
       },
     },
   },

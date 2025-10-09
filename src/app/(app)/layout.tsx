@@ -9,12 +9,14 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { UserNav } from "@/components/user-nav";
+import { redirect } from "next/navigation";
 
 export default function AppLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
   return (
     <SidebarProvider>
       <Sidebar collapsible="icon" className="border-sidebar-border">

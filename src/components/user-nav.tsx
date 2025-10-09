@@ -43,19 +43,19 @@ export function UserNav() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <Link href="/app/settings/profile" passHref>
+          <Link href="/settings/profile" passHref>
             <DropdownMenuItem>
               <User />
               Profile
             </DropdownMenuItem>
           </Link>
-          <Link href="/app/settings/device" passHref>
+          <Link href="/settings/device" passHref>
             <DropdownMenuItem>
               <CreditCard />
               Device
             </DropdownMenuItem>
           </Link>
-          <Link href="/app/settings/profile" passHref>
+          <Link href="/settings/profile" passHref>
             <DropdownMenuItem>
               <Settings />
               Settings

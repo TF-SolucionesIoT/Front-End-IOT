@@ -45,7 +45,7 @@ export default function LoginPage() {
             <Input id="password" type="password" required />
           </div>
           <Button type="submit" className="w-full" asChild>
-            <Link href="/app/dashboard">Login</Link>
+            <Link href="/dashboard">Login</Link>
           </Button>
           <Button variant="outline" className="w-full">
             Login with Google

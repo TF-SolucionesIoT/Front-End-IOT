@@ -13,8 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/logo";
 import Link from "next/link";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { signUpPatient, signUpCaregiver } from "@/lib/api/auth";
+import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -28,7 +27,7 @@ import {
 type UserType = 'patient' | 'caregiver';
 
 export default function SignUpPage() {
-  const router = useRouter();
+  const { register, isLoading: authLoading, error: authError } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [userType, setUserType] = useState<UserType>('patient');
@@ -147,39 +146,30 @@ export default function SignUpPage() {
     setIsLoading(true);
 
     try {
-      if (userType === 'patient') {
-        await signUpPatient({
-          firstName: commonData.firstName,
-          lastName: commonData.lastName,
-          email: commonData.email,
-          gender: commonData.gender,
-          username: commonData.username,
-          password: commonData.password,
-          birthday: patientData.birthday,
-        });
-      } else {
-        await signUpCaregiver({
-          firstName: commonData.firstName,
-          lastName: commonData.lastName,
-          email: commonData.email,
-          gender: commonData.gender,
-          username: commonData.username,
-          password: commonData.password,
-          phoneNumber: caregiverData.phoneNumber,
-        });
-      }
+      const data = {
+        firstName: commonData.firstName,
+        lastName: commonData.lastName,
+        email: commonData.email,
+        gender: commonData.gender,
+        username: commonData.username,
+        password: commonData.password,
+        ...(userType === 'patient' 
+          ? { birthday: patientData.birthday }
+          : { phoneNumber: caregiverData.phoneNumber }
+        )
+      };
+
+      await register(data, userType);
 
       toast({
         title: "¡Cuenta creada!",
         description: `Tu cuenta de ${userType === 'patient' ? 'paciente' : 'cuidador'} ha sido creada exitosamente`,
       });
-
-      // Redirigir al dashboard después del registro exitoso
-      router.push('/dashboard');
     } catch (error) {
+      // Error ya manejado por useAuth
       toast({
         title: "Error al registrarse",
-        description: error instanceof Error ? error.message : "Ocurrió un error al crear la cuenta",
+        description: authError || "Ocurrió un error al crear la cuenta",
         variant: "destructive",
       });
     } finally {

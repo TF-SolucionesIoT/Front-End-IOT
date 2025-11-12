@@ -11,16 +11,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/logo";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { login } from "@/lib/api/auth";
-import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function LoginPage() {
-  const router = useRouter();
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
+  const { login, isLoading, error, clearError } = useAuth();
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -28,29 +26,15 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsLoading(true);
+    clearError();
 
     try {
       await login({
         username: formData.username,
         password: formData.password,
       });
-
-      toast({
-        title: "¡Bienvenido!",
-        description: "Has iniciado sesión exitosamente",
-      });
-
-      // Redirigir al dashboard después del login exitoso
-      router.push('/dashboard');
-    } catch (error) {
-      toast({
-        title: "Error al iniciar sesión",
-        description: error instanceof Error ? error.message : "Usuario o contraseña incorrectos",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+    } catch {
+      // Error ya manejado por useAuth
     }
   };
 
@@ -72,6 +56,13 @@ export default function LoginPage() {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="grid gap-4">
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
           <div className="grid gap-2">
             <Label htmlFor="username">Usuario</Label>
             <Input

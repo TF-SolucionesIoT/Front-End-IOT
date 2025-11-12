@@ -14,11 +14,12 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { CreditCard, LogOut, Settings, User } from "lucide-react";
-import { logout } from "@/lib/api/auth";
+import { useAuth } from "@/hooks/use-auth";
 import { useUser } from "@/hooks/use-user";
 
 export function UserNav() {
   const { user, loading } = useUser();
+  const { logout } = useAuth();
   const userAvatar = PlaceHolderImages.find((img) => img.id === "user-avatar-1");
 
   const handleLogout = () => {

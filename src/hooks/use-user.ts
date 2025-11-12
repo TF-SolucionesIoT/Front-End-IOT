@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { getUserProfile, UserProfile, getAuthToken } from '@/lib/api/auth';
+import { getCurrentUserProfile } from '@/lib/api/profile';
+import { getStoredToken } from '@/lib/api/client';
+import type { UserProfile } from '@/lib/api/types';
 
 /**
  * Obtiene el perfil del usuario desde localStorage de forma síncrona
@@ -21,6 +23,15 @@ function getUserFromStorage(): UserProfile | null {
   return null;
 }
 
+/**
+ * Guarda el perfil del usuario en localStorage
+ */
+function saveUserToStorage(profile: UserProfile): void {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('user_profile', JSON.stringify(profile));
+  }
+}
+
 export function useUser() {
   // Inicializar con datos de localStorage si están disponibles (carga inmediata)
   const [user, setUser] = useState<UserProfile | null>(() => getUserFromStorage());
@@ -37,9 +48,10 @@ export function useUser() {
       }
       setError(null);
       
-      const userData = await getUserProfile();
+      const userData = await getCurrentUserProfile();
       console.log('Usuario cargado en hook:', userData);
       setUser(userData);
+      saveUserToStorage(userData);
     } catch (err) {
       console.error('Error al obtener usuario:', err);
       const error = err instanceof Error ? err : new Error('Error al obtener usuario');
@@ -60,7 +72,7 @@ export function useUser() {
 
   useEffect(() => {
     // Solo hacer fetch si hay token (usuario autenticado)
-    const token = getAuthToken();
+    const token = getStoredToken();
     if (token) {
       fetchUser();
     } else {

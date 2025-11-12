@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -23,7 +23,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -35,77 +35,112 @@ import {
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-
-type Alteration = {
-  id: number;
-  date: string;
-  time: string;
-  description: string;
-};
-
-const initialAlterations: Alteration[] = [
-  {
-    id: 1,
-    date: '2024-07-31',
-    time: '10:30 AM',
-    description: 'Feeling dizzy after medication.',
-  },
-  {
-    id: 2,
-    date: '2024-07-30',
-    time: '03:15 PM',
-    description: 'Experienced a slight headache.',
-  },
-];
+import { useToast } from '@/hooks/use-toast';
+import { disturbancesApi } from '@/lib/api/disturbances';
+import type { Disturbance } from '@/lib/api/types';
 
 export default function AlterationsPage() {
-  const [alterations, setAlterations] =
-    useState<Alteration[]>(initialAlterations);
+  const [alterations, setAlterations] = useState<Disturbance[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingAlteration, setEditingAlteration] =
-    useState<Alteration | null>(null);
   const [newAlteration, setNewAlteration] = useState({
     description: '',
     date: '',
     time: '',
   });
+  const { toast } = useToast();
+
+  // Cargar alteraciones al montar el componente
+  useEffect(() => {
+    loadAlterations();
+  }, []);
+
+  const loadAlterations = async () => {
+    try {
+      setIsLoading(true);
+      const data = await disturbancesApi.getAll();
+      setAlterations(data);
+    } catch (error) {
+      console.error('Error loading alterations:', error);
+      toast({
+        title: 'Error',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'No se pudieron cargar las alteraciones',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleAddClick = () => {
-    setEditingAlteration(null);
     setNewAlteration({ description: '', date: '', time: '' });
     setIsDialogOpen(true);
   };
 
-  const handleEditClick = (alteration: Alteration) => {
-    setEditingAlteration(alteration);
-    setNewAlteration({
-      description: alteration.description,
-      date: alteration.date,
-      time: alteration.time,
-    });
-    setIsDialogOpen(true);
-  };
-
-  const handleDeleteClick = (id: number) => {
-    setAlterations(alterations.filter((alt) => alt.id !== id));
-  };
-
-  const handleSave = () => {
-    if (editingAlteration) {
-      setAlterations(
-        alterations.map((alt) =>
-          alt.id === editingAlteration.id
-            ? { ...alt, ...newAlteration }
-            : alt
-        )
-      );
-    } else {
-      setAlterations([
-        ...alterations,
-        { id: alterations.length + 1, ...newAlteration },
-      ]);
+  const handleDeleteClick = async (id: number) => {
+    try {
+      await disturbancesApi.delete(id);
+      toast({
+        title: 'Éxito',
+        description: 'Alteración eliminada correctamente',
+      });
+      // Recargar la lista
+      await loadAlterations();
+    } catch (error) {
+      console.error('Error deleting alteration:', error);
+      toast({
+        title: 'Error',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'No se pudo eliminar la alteración',
+        variant: 'destructive',
+      });
     }
-    setIsDialogOpen(false);
+  };
+
+  const handleSave = async () => {
+    // Validar campos
+    if (!newAlteration.description || !newAlteration.date || !newAlteration.time) {
+      toast({
+        title: 'Error de validación',
+        description: 'Por favor completa todos los campos',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      await disturbancesApi.create({
+        description: newAlteration.description,
+        date: newAlteration.date,
+        time: newAlteration.time,
+      });
+      toast({
+        title: 'Éxito',
+        description: 'Alteración creada correctamente',
+      });
+      setIsDialogOpen(false);
+      // Recargar la lista
+      await loadAlterations();
+    } catch (error) {
+      console.error('Error creating alteration:', error);
+      toast({
+        title: 'Error',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'No se pudo crear la alteración',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -141,36 +176,48 @@ export default function AlterationsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {alterations.map((alteration) => (
-                <TableRow key={alteration.id}>
-                  <TableCell>{alteration.id}</TableCell>
-                  <TableCell>{alteration.date}</TableCell>
-                  <TableCell>{alteration.time}</TableCell>
-                  <TableCell>{alteration.description}</TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent>
-                        <DropdownMenuItem
-                          onClick={() => handleEditClick(alteration)}
-                        >
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleDeleteClick(alteration.id)}
-                          className="text-destructive"
-                        >
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+                    <p className="mt-2 text-muted-foreground">
+                      Cargando alteraciones...
+                    </p>
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : alterations.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    No hay alteraciones registradas
+                  </TableCell>
+                </TableRow>
+              ) : (
+                alterations.map((alteration) => (
+                  <TableRow key={alteration.id}>
+                    <TableCell>{alteration.id}</TableCell>
+                    <TableCell>{alteration.date}</TableCell>
+                    <TableCell>{alteration.time}</TableCell>
+                    <TableCell>{alteration.description}</TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem
+                            onClick={() => handleDeleteClick(alteration.id)}
+                            className="text-destructive"
+                          >
+                            Eliminar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -179,13 +226,9 @@ export default function AlterationsPage() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {editingAlteration ? 'Edit Alteration' : 'Add Alteration'}
-            </DialogTitle>
+            <DialogTitle>Agregar Alteración</DialogTitle>
             <DialogDescription>
-              {editingAlteration
-                ? 'Update the details of the alteration.'
-                : 'Fill in the form to add a new alteration.'}
+              Completa el formulario para agregar una nueva alteración.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -229,10 +272,23 @@ export default function AlterationsPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Cancel
+            <Button
+              variant="outline"
+              onClick={() => setIsDialogOpen(false)}
+              disabled={isSaving}
+            >
+              Cancelar
             </Button>
-            <Button onClick={handleSave}>Save</Button>
+            <Button onClick={handleSave} disabled={isSaving}>
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Guardando...
+                </>
+              ) : (
+                'Guardar'
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -9,7 +9,7 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, Pill, PlusCircle } from 'lucide-react';
+import { MoreHorizontal, Pill, PlusCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -34,101 +34,94 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-
-type Treatment = {
-  id: number;
-  time: string;
-  name: string;
-  dose: string;
-  status: 'Taken' | 'Upcoming';
-};
-
-const initialTreatments: Treatment[] = [
-  {
-    id: 1,
-    time: '08:00 AM',
-    name: 'Lisinopril',
-    dose: '10mg',
-    status: 'Taken',
-  },
-  {
-    id: 2,
-    time: '08:00 AM',
-    name: 'Metformin',
-    dose: '500mg',
-    status: 'Taken',
-  },
-  {
-    id: 3,
-    time: '01:00 PM',
-    name: 'Aspirin',
-    dose: '81mg',
-    status: 'Upcoming',
-  },
-  {
-    id: 4,
-    time: '08:00 PM',
-    name: 'Atorvastatin',
-    dose: '20mg',
-    status: 'Upcoming',
-  },
-];
+import { useToast } from '@/hooks/use-toast';
+import { treatmentsApi } from '@/lib/api/treatments';
+import type { Treatment } from '@/lib/api/types';
 
 export default function TreatmentsPage() {
-  const [treatments, setTreatments] =
-    useState<Treatment[]>(initialTreatments);
+  const [treatments, setTreatments] = useState<Treatment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingTreatment, setEditingTreatment] =
-    useState<Treatment | null>(null);
   const [newTreatment, setNewTreatment] = useState({
     name: '',
     dose: '',
     time: '',
-    status: 'Upcoming' as 'Taken' | 'Upcoming',
   });
+  const { toast } = useToast();
+
+  // Cargar tratamientos al montar el componente
+  useEffect(() => {
+    loadTreatments();
+  }, []);
+
+  const loadTreatments = async () => {
+    try {
+      setIsLoading(true);
+      const data = await treatmentsApi.getAll();
+      setTreatments(data);
+    } catch (error) {
+      console.error('Error loading treatments:', error);
+      toast({
+        title: 'Error',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'No se pudieron cargar los tratamientos',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleAddClick = () => {
-    setEditingTreatment(null);
     setNewTreatment({
       name: '',
       dose: '',
       time: '',
-      status: 'Upcoming',
     });
     setIsDialogOpen(true);
   };
 
-  const handleEditClick = (treatment: Treatment) => {
-    setEditingTreatment(treatment);
-    setNewTreatment({
-      name: treatment.name,
-      dose: treatment.dose,
-      time: treatment.time,
-      status: treatment.status,
-    });
-    setIsDialogOpen(true);
-  };
-
-  const handleDeleteClick = (id: number) => {
-    setTreatments(treatments.filter((t) => t.id !== id));
-  };
-
-  const handleSave = () => {
-    if (editingTreatment) {
-      setTreatments(
-        treatments.map((t) =>
-          t.id === editingTreatment.id
-            ? { ...editingTreatment, ...newTreatment }
-            : t
-        )
-      );
-    } else {
-      setTreatments([
-        ...treatments,
-        { id: treatments.length + 1, ...newTreatment },
-      ]);
+  const handleSave = async () => {
+    // Validar campos
+    if (!newTreatment.name || !newTreatment.dose || !newTreatment.time) {
+      toast({
+        title: 'Error de validación',
+        description: 'Por favor completa todos los campos',
+        variant: 'destructive',
+      });
+      return;
     }
-    setIsDialogOpen(false);
+
+    try {
+      setIsSaving(true);
+      await treatmentsApi.create({
+        name: newTreatment.name,
+        dose: newTreatment.dose,
+        time: newTreatment.time,
+      });
+      toast({
+        title: 'Éxito',
+        description: 'Tratamiento creado correctamente',
+      });
+      setIsDialogOpen(false);
+      // Recargar la lista
+      await loadTreatments();
+    } catch (error) {
+      console.error('Error creating treatment:', error);
+      toast({
+        title: 'Error',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'No se pudo crear el tratamiento',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -151,97 +144,86 @@ export default function TreatmentsPage() {
           <CardDescription>Your daily medication schedule.</CardDescription>
         </CardHeader>
         <CardContent>
-          <ul className="space-y-4">
-            {treatments.map((treatment) => (
-              <li key={treatment.id} className="flex items-center gap-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
-                  <Pill className="h-5 w-5 text-secondary-foreground" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-semibold">{treatment.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {treatment.dose}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium">{treatment.time}</p>
-                  {treatment.status === 'Taken' ? (
-                    <Badge className="bg-[#E8F5E9] text-[#2E7D32] hover:bg-[#E8F5E9]">
-                      Taken
-                    </Badge>
-                  ) : (
-                    <Badge
-                      variant="outline"
-                      className="border-amber-500 text-amber-500"
-                    >
-                      Upcoming
-                    </Badge>
-                  )}
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <MoreHorizontal />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem
-                      onClick={() => handleEditClick(treatment)}
-                    >
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => handleDeleteClick(treatment.id)}
-                      className="text-destructive"
-                    >
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </li>
-            ))}
-          </ul>
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin" />
+              <p className="mt-2 text-muted-foreground">
+                Cargando tratamientos...
+              </p>
+            </div>
+          ) : treatments.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No hay tratamientos registrados
+            </div>
+          ) : (
+            <ul className="space-y-4">
+              {treatments.map((treatment) => (
+                <li key={treatment.id} className="flex items-center gap-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
+                    <Pill className="h-5 w-5 text-secondary-foreground" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold">{treatment.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {treatment.dose}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-medium">{treatment.time}</p>
+                    {treatment.status === 'Taken' ? (
+                      <Badge className="bg-[#E8F5E9] text-[#2E7D32] hover:bg-[#E8F5E9]">
+                        Tomado
+                      </Badge>
+                    ) : (
+                      <Badge
+                        variant="outline"
+                        className="border-amber-500 text-amber-500"
+                      >
+                        Próximo
+                      </Badge>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </CardContent>
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {editingTreatment ? 'Edit Treatment' : 'Add Treatment'}
-            </DialogTitle>
+            <DialogTitle>Agregar Tratamiento</DialogTitle>
             <DialogDescription>
-              {editingTreatment
-                ? 'Update the details of the treatment.'
-                : 'Fill in the form to add a new treatment.'}
+              Completa el formulario para agregar un nuevo tratamiento.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="name">Medication Name</Label>
+              <Label htmlFor="name">Nombre del Medicamento</Label>
               <Input
                 id="name"
                 value={newTreatment.name}
                 onChange={(e) =>
                   setNewTreatment({ ...newTreatment, name: e.target.value })
                 }
-                placeholder="e.g. Lisinopril"
+                placeholder="ej. Lisinopril"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="dose">Dose</Label>
+                <Label htmlFor="dose">Dosis</Label>
                 <Input
                   id="dose"
                   value={newTreatment.dose}
                   onChange={(e) =>
                     setNewTreatment({ ...newTreatment, dose: e.target.value })
                   }
-                  placeholder="e.g. 10mg"
+                  placeholder="ej. 10mg"
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="time">Time</Label>
+                <Label htmlFor="time">Hora</Label>
                 <Input
                   id="time"
                   type="time"
@@ -252,29 +234,25 @@ export default function TreatmentsPage() {
                 />
               </div>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="status">Status</Label>
-              <Select
-                value={newTreatment.status}
-                onValueChange={(value: 'Taken' | 'Upcoming') =>
-                  setNewTreatment({ ...newTreatment, status: value })
-                }
-              >
-                <SelectTrigger id="status">
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Upcoming">Upcoming</SelectItem>
-                  <SelectItem value="Taken">Taken</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Cancel
+            <Button
+              variant="outline"
+              onClick={() => setIsDialogOpen(false)}
+              disabled={isSaving}
+            >
+              Cancelar
             </Button>
-            <Button onClick={handleSave}>Save</Button>
+            <Button onClick={handleSave} disabled={isSaving}>
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Guardando...
+                </>
+              ) : (
+                'Guardar'
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

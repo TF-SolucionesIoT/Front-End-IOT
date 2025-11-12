@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -23,7 +23,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -35,70 +35,112 @@ import {
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-
-type Symptom = {
-  id: number;
-  date: string;
-  time: string;
-  description: string;
-};
-
-const initialSymptoms: Symptom[] = [
-  {
-    id: 1,
-    date: '2024-08-01',
-    time: '09:00 AM',
-    description: 'Persistent cough and slight fever.',
-  },
-  {
-    id: 2,
-    date: '2024-07-31',
-    time: '06:30 PM',
-    description: 'Feeling fatigued throughout the day.',
-  },
-];
+import { useToast } from '@/hooks/use-toast';
+import { symptomsApi } from '@/lib/api/symptoms';
+import type { Symptom } from '@/lib/api/types';
 
 export default function SymptomsPage() {
-  const [symptoms, setSymptoms] = useState<Symptom[]>(initialSymptoms);
+  const [symptoms, setSymptoms] = useState<Symptom[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingSymptom, setEditingSymptom] = useState<Symptom | null>(null);
   const [newSymptom, setNewSymptom] = useState({
     description: '',
     date: '',
     time: '',
   });
+  const { toast } = useToast();
+
+  // Cargar síntomas al montar el componente
+  useEffect(() => {
+    loadSymptoms();
+  }, []);
+
+  const loadSymptoms = async () => {
+    try {
+      setIsLoading(true);
+      const data = await symptomsApi.getAll();
+      setSymptoms(data);
+    } catch (error) {
+      console.error('Error loading symptoms:', error);
+      toast({
+        title: 'Error',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'No se pudieron cargar los síntomas',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleAddClick = () => {
-    setEditingSymptom(null);
     setNewSymptom({ description: '', date: '', time: '' });
     setIsDialogOpen(true);
   };
 
-  const handleEditClick = (symptom: Symptom) => {
-    setEditingSymptom(symptom);
-    setNewSymptom({
-      description: symptom.description,
-      date: symptom.date,
-      time: symptom.time,
-    });
-    setIsDialogOpen(true);
-  };
-
-  const handleDeleteClick = (id: number) => {
-    setSymptoms(symptoms.filter((sym) => sym.id !== id));
-  };
-
-  const handleSave = () => {
-    if (editingSymptom) {
-      setSymptoms(
-        symptoms.map((sym) =>
-          sym.id === editingSymptom.id ? { ...sym, ...newSymptom } : sym
-        )
-      );
-    } else {
-      setSymptoms([...symptoms, { id: symptoms.length + 1, ...newSymptom }]);
+  const handleDeleteClick = async (id: number) => {
+    try {
+      await symptomsApi.delete(id);
+      toast({
+        title: 'Éxito',
+        description: 'Síntoma eliminado correctamente',
+      });
+      // Recargar la lista
+      await loadSymptoms();
+    } catch (error) {
+      console.error('Error deleting symptom:', error);
+      toast({
+        title: 'Error',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'No se pudo eliminar el síntoma',
+        variant: 'destructive',
+      });
     }
-    setIsDialogOpen(false);
+  };
+
+  const handleSave = async () => {
+    // Validar campos
+    if (!newSymptom.description || !newSymptom.date || !newSymptom.time) {
+      toast({
+        title: 'Error de validación',
+        description: 'Por favor completa todos los campos',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      await symptomsApi.create({
+        description: newSymptom.description,
+        date: newSymptom.date,
+        time: newSymptom.time,
+      });
+      toast({
+        title: 'Éxito',
+        description: 'Síntoma creado correctamente',
+      });
+      setIsDialogOpen(false);
+      // Recargar la lista
+      await loadSymptoms();
+    } catch (error) {
+      console.error('Error creating symptom:', error);
+      toast({
+        title: 'Error',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'No se pudo crear el síntoma',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -134,34 +176,48 @@ export default function SymptomsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {symptoms.map((symptom) => (
-                <TableRow key={symptom.id}>
-                  <TableCell>{symptom.id}</TableCell>
-                  <TableCell>{symptom.date}</TableCell>
-                  <TableCell>{symptom.time}</TableCell>
-                  <TableCell>{symptom.description}</TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent>
-                        <DropdownMenuItem onClick={() => handleEditClick(symptom)}>
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleDeleteClick(symptom.id)}
-                          className="text-destructive"
-                        >
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+                    <p className="mt-2 text-muted-foreground">
+                      Cargando síntomas...
+                    </p>
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : symptoms.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    No hay síntomas registrados
+                  </TableCell>
+                </TableRow>
+              ) : (
+                symptoms.map((symptom) => (
+                  <TableRow key={symptom.id}>
+                    <TableCell>{symptom.id}</TableCell>
+                    <TableCell>{symptom.date}</TableCell>
+                    <TableCell>{symptom.time}</TableCell>
+                    <TableCell>{symptom.description}</TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem
+                            onClick={() => handleDeleteClick(symptom.id)}
+                            className="text-destructive"
+                          >
+                            Eliminar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -170,13 +226,9 @@ export default function SymptomsPage() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {editingSymptom ? 'Edit Symptom' : 'Add Symptom'}
-            </DialogTitle>
+            <DialogTitle>Agregar Síntoma</DialogTitle>
             <DialogDescription>
-              {editingSymptom
-                ? 'Update the details of the symptom.'
-                : 'Fill in the form to add a new symptom.'}
+              Completa el formulario para agregar un nuevo síntoma.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -220,10 +272,23 @@ export default function SymptomsPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Cancel
+            <Button
+              variant="outline"
+              onClick={() => setIsDialogOpen(false)}
+              disabled={isSaving}
+            >
+              Cancelar
             </Button>
-            <Button onClick={handleSave}>Save</Button>
+            <Button onClick={handleSave} disabled={isSaving}>
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Guardando...
+                </>
+              ) : (
+                'Guardar'
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

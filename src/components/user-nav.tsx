@@ -1,3 +1,5 @@
+'use client';
+
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import {
   DropdownMenu,
@@ -12,9 +14,38 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { CreditCard, LogOut, Settings, User } from "lucide-react";
+import { logout } from "@/lib/api/auth";
+import { useUser } from "@/hooks/use-user";
 
 export function UserNav() {
+  const { user, loading } = useUser();
   const userAvatar = PlaceHolderImages.find((img) => img.id === "user-avatar-1");
+
+  const handleLogout = () => {
+    logout();
+  };
+
+  // Obtener iniciales del usuario
+  const getInitials = () => {
+    if (!user) return 'U';
+    const firstInitial = user.firstName?.[0]?.toUpperCase() || '';
+    const lastInitial = user.lastName?.[0]?.toUpperCase() || '';
+    if (firstInitial && lastInitial) return `${firstInitial}${lastInitial}`;
+    if (user.username) return user.username[0].toUpperCase();
+    return 'U';
+  };
+
+  // Obtener nombre completo
+  const getFullName = () => {
+    if (!user) return 'Usuario';
+    const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
+    return fullName || user.username || 'Usuario';
+  };
+
+  // Obtener email
+  const getUserEmail = () => {
+    return user?.email || 'No disponible';
+  };
 
   return (
     <DropdownMenu>
@@ -28,16 +59,18 @@ export function UserNav() {
                 data-ai-hint={userAvatar.imageHint}
               />
             )}
-            <AvatarFallback>JD</AvatarFallback>
+            <AvatarFallback>{getInitials()}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">Jane Doe</p>
+            <p className="text-sm font-medium leading-none">
+              {loading ? 'Cargando...' : getFullName()}
+            </p>
             <p className="text-xs leading-none text-muted-foreground">
-              jane.doe@example.com
+              {loading ? '...' : getUserEmail()}
             </p>
           </div>
         </DropdownMenuLabel>
@@ -46,29 +79,27 @@ export function UserNav() {
           <Link href="/settings/profile" passHref>
             <DropdownMenuItem>
               <User />
-              Profile
+              Perfil
             </DropdownMenuItem>
           </Link>
           <Link href="/settings/device" passHref>
             <DropdownMenuItem>
               <CreditCard />
-              Device
+              Dispositivo
             </DropdownMenuItem>
           </Link>
           <Link href="/settings/profile" passHref>
             <DropdownMenuItem>
               <Settings />
-              Settings
+              Configuración
             </DropdownMenuItem>
           </Link>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <Link href="/auth/login" passHref>
-          <DropdownMenuItem>
-            <LogOut />
-            Log out
-          </DropdownMenuItem>
-        </Link>
+        <DropdownMenuItem onClick={handleLogout}>
+          <LogOut />
+          Cerrar sesión
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

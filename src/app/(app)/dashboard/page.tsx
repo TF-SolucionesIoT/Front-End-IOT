@@ -1,3 +1,6 @@
+'use client';
+
+import { useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -7,6 +10,7 @@ import {
 } from '@/components/ui/card';
 import { VitalsChart } from '@/components/vitals-chart';
 import { Heart } from 'lucide-react';
+import { useUser } from '@/hooks/use-user';
 
 const vitalsData = {
   heartRate: [
@@ -20,11 +24,41 @@ const vitalsData = {
 };
 
 export default function DashboardPage() {
+  const { user, loading, error } = useUser();
+  
+  // Debug: mostrar información en consola
+  useEffect(() => {
+    if (user) {
+      console.log('Usuario en dashboard:', user);
+      console.log('firstName:', user.firstName);
+      console.log('lastName:', user.lastName);
+      console.log('username:', user.username);
+    }
+    if (error) {
+      console.error('Error en dashboard:', error);
+    }
+  }, [user, error]);
+  
+  const userName = user 
+    ? (user.firstName && user.lastName 
+        ? `${user.firstName} ${user.lastName}`.trim() 
+        : user.firstName || user.lastName || user.username || 'Usuario')
+    : 'Usuario';
+
+  if (error && !loading) {
+    console.error('Error al cargar usuario:', error.message);
+  }
+
   return (
     <div className="flex flex-col gap-8 items-center justify-center h-full">
       <h1 className="text-4xl font-bold tracking-tight text-center">
-        Hi John Doe!
+        {loading ? 'Cargando...' : `¡Hola ${userName}!`}
       </h1>
+      {error && !loading && (
+        <p className="text-sm text-muted-foreground">
+          Error: {error.message}
+        </p>
+      )}
       <div className="w-full max-w-sm">
         <Card className="shadow-card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -42,6 +76,7 @@ export default function DashboardPage() {
               data={vitalsData.heartRate}
               dataKey="value"
               color="var(--chart-1)"
+              chartType="area"
             />
           </CardFooter>
         </Card>

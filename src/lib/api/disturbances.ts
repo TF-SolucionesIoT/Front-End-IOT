@@ -37,10 +37,9 @@ export const disturbancesApi = {
    * DELETE /api/records/disturbances
    */
   delete: async (disturbanceId: number): Promise<void> => {
-    const data: DeleteDisturbanceRequest = { disturbanceId };
     await apiRequest<void>('/disturbances', {
       method: 'DELETE',
-      body: JSON.stringify(data),
+      body: JSON.stringify(disturbanceId),
     });
   },
 };

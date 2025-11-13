@@ -55,17 +55,18 @@ export interface UserProfile {
 // ==================== DISTURBANCES (Alteraciones) ====================
 
 export interface CreateDisturbanceRequest {
+  name: string;
   description: string;
-  date: string; // Formato: YYYY-MM-DD
-  time: string; // Formato: HH:mm
+  severity_level: number; // 1 - 5
+  onset_date: string; // Formato: YYYY-MM-DD
 }
 
 export interface Disturbance {
   id: number;
+  name: string;
   description: string;
-  date: string;
-  time: string;
-  // Agregar otros campos que retorne el backend si los hay
+  severityLevel: number; // 1 - 5
+  onsetDate: string; // Formato: YYYY-MM-DD
 }
 
 export interface DeleteDisturbanceRequest {

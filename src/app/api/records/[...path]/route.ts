@@ -73,7 +73,12 @@ async function proxyRequest(
     const authHeader = request.headers.get('authorization');
     if (authHeader) {
       headers['Authorization'] = authHeader;
+      console.log('🔑 Auth header present:', authHeader.substring(0, 20) + '...');
+    } else {
+      console.log('⚠️ No auth header found in request');
     }
+    
+    console.log('📤 Proxying request:', method, fullUrl);
     
     // Copiar otros headers relevantes (excluyendo algunos que Next.js maneja)
     request.headers.forEach((value, key) => {
@@ -98,6 +103,8 @@ async function proxyRequest(
 
     // Obtener la respuesta
     const responseData = await response.text();
+    
+    console.log('📥 Backend response:', response.status, response.statusText);
     
     // Crear la respuesta con los mismos headers (excepto algunos)
     const responseHeaders = new Headers();

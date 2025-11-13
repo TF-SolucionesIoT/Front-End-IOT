@@ -18,7 +18,7 @@ export const API_CONFIG = {
  */
 function getAuthToken(): string | null {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem('auth_token');
+    return localStorage.getItem('accessToken');
   }
   return null;
 }
@@ -35,14 +35,25 @@ export async function apiRequest<T>(
   // Obtener el token de autenticación
   const token = getAuthToken();
   
+  // Log para debug
+  console.log('🔍 API Request:', {
+    url,
+    method: options.method || 'GET',
+    hasToken: !!token,
+    tokenPreview: token ? token.substring(0, 20) + '...' : 'NO TOKEN'
+  });
+  
   // Preparar headers con el token si está disponible
-  const headers: HeadersInit = {
-    ...API_CONFIG.HEADERS,
-    ...options.headers,
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
   };
   
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
+    console.log('✅ Authorization header added');
+  } else {
+    console.warn('⚠️ No token found in localStorage');
   }
   
   const response = await fetch(url, {
@@ -50,17 +61,46 @@ export async function apiRequest<T>(
     headers,
   });
 
+  console.log('📥 Response:', response.status, response.statusText);
+
   if (!response.ok) {
     // Si es un error 401, podría ser que el token haya expirado
     if (response.status === 401) {
+      console.error('🔒 401 Unauthorized - Token expired or invalid');
       // Limpiar el token y redirigir al login
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('auth_token');
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
         window.location.href = '/auth/login';
       }
     }
     
+    // Si es 403, puede ser un problema de autorización
+    if (response.status === 403) {
+      console.error('🚫 403 Forbidden - Token:', token ? 'Present' : 'Missing');
+      console.error('Request URL:', url);
+      console.error('Headers sent:', headers);
+    }
+    
+    // Si es 400, hay un error en la petición o validación
+    if (response.status === 400) {
+      console.error('⚠️ 400 Bad Request - Request URL:', url);
+      console.error('Headers sent:', headers);
+    }
+    
     const errorText = await response.text();
+    console.error('❌ Error response body:', errorText || '(empty)');
+    
+    // Intentar parsear como JSON para ver el error completo
+    if (errorText) {
+      try {
+        const errorJson = JSON.parse(errorText);
+        console.error('📋 Parsed error:', errorJson);
+      } catch (e) {
+        // No es JSON, ya se mostró el texto
+      }
+    }
+    
     throw new Error(
       `API Error: ${response.status} ${response.statusText} - ${errorText}`
     );

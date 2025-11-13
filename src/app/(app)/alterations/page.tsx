@@ -45,9 +45,10 @@ export default function AlterationsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newAlteration, setNewAlteration] = useState({
+    name: '',
     description: '',
-    date: '',
-    time: '',
+    severity_level: 3,
+    onset_date: '',
   });
   const { toast } = useToast();
 
@@ -77,7 +78,7 @@ export default function AlterationsPage() {
   };
 
   const handleAddClick = () => {
-    setNewAlteration({ description: '', date: '', time: '' });
+    setNewAlteration({ name: '', description: '', severity_level: 3, onset_date: '' });
     setIsDialogOpen(true);
   };
 
@@ -105,7 +106,7 @@ export default function AlterationsPage() {
 
   const handleSave = async () => {
     // Validar campos
-    if (!newAlteration.description || !newAlteration.date || !newAlteration.time) {
+    if (!newAlteration.name || !newAlteration.description || !newAlteration.onset_date) {
       toast({
         title: 'Error de validación',
         description: 'Por favor completa todos los campos',
@@ -114,12 +115,32 @@ export default function AlterationsPage() {
       return;
     }
 
+    // Validar límites del backend
+    if (newAlteration.name.length > 20) {
+      toast({
+        title: 'Error de validación',
+        description: 'El nombre no puede tener más de 20 caracteres',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (newAlteration.description.length > 50) {
+      toast({
+        title: 'Error de validación',
+        description: 'La descripción no puede tener más de 50 caracteres',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
       setIsSaving(true);
       await disturbancesApi.create({
+        name: newAlteration.name,
         description: newAlteration.description,
-        date: newAlteration.date,
-        time: newAlteration.time,
+        severity_level: newAlteration.severity_level,
+        onset_date: newAlteration.onset_date,
       });
       toast({
         title: 'Éxito',
@@ -169,9 +190,10 @@ export default function AlterationsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[50px]">#</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Time</TableHead>
+                <TableHead>Name</TableHead>
                 <TableHead>Description</TableHead>
+                <TableHead>Severity</TableHead>
+                <TableHead>Onset Date</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -195,9 +217,18 @@ export default function AlterationsPage() {
                 alterations.map((alteration) => (
                   <TableRow key={alteration.id}>
                     <TableCell>{alteration.id}</TableCell>
-                    <TableCell>{alteration.date}</TableCell>
-                    <TableCell>{alteration.time}</TableCell>
+                    <TableCell>{alteration.name}</TableCell>
                     <TableCell>{alteration.description}</TableCell>
+                    <TableCell>
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        alteration.severityLevel >= 4 ? 'bg-red-100 text-red-700' :
+                        alteration.severityLevel >= 3 ? 'bg-yellow-100 text-yellow-700' :
+                        'bg-green-100 text-green-700'
+                      }`}>
+                        {alteration.severityLevel}/5
+                      </span>
+                    </TableCell>
+                    <TableCell>{alteration.onsetDate}</TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -233,7 +264,25 @@ export default function AlterationsPage() {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="name">Name (máx. 20 caracteres)</Label>
+              <Input
+                id="name"
+                value={newAlteration.name}
+                onChange={(e) =>
+                  setNewAlteration({
+                    ...newAlteration,
+                    name: e.target.value,
+                  })
+                }
+                placeholder="Enter the name of the alteration"
+                maxLength={20}
+              />
+              <p className="text-xs text-muted-foreground">
+                {newAlteration.name.length}/20 caracteres
+              </p>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="description">Description (máx. 50 caracteres)</Label>
               <Textarea
                 id="description"
                 value={newAlteration.description}
@@ -243,29 +292,35 @@ export default function AlterationsPage() {
                     description: e.target.value,
                   })
                 }
-                placeholder="Enter a description"
+                placeholder="Enter a detailed description"
+                maxLength={50}
               />
+              <p className="text-xs text-muted-foreground">
+                {newAlteration.description.length}/50 caracteres
+              </p>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="date">Date</Label>
+                <Label htmlFor="severity">Severity Level (1-5)</Label>
                 <Input
-                  id="date"
-                  type="date"
-                  value={newAlteration.date}
+                  id="severity"
+                  type="number"
+                  min="1"
+                  max="5"
+                  value={newAlteration.severity_level}
                   onChange={(e) =>
-                    setNewAlteration({ ...newAlteration, date: e.target.value })
+                    setNewAlteration({ ...newAlteration, severity_level: parseInt(e.target.value) || 1 })
                   }
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="time">Time</Label>
+                <Label htmlFor="date">Onset Date</Label>
                 <Input
-                  id="time"
-                  type="time"
-                  value={newAlteration.time}
+                  id="date"
+                  type="date"
+                  value={newAlteration.onset_date}
                   onChange={(e) =>
-                    setNewAlteration({ ...newAlteration, time: e.target.value })
+                    setNewAlteration({ ...newAlteration, onset_date: e.target.value })
                   }
                 />
               </div>

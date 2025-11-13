@@ -76,17 +76,22 @@ export interface DeleteDisturbanceRequest {
 // ==================== SYMPTOMS (Síntomas) ====================
 
 export interface CreateSymptonRequest {
+  name: string;
   description: string;
-  date: string; // Formato: YYYY-MM-DD
-  time: string; // Formato: HH:mm
+  severity_level: number; // 1 - 5
+  onset_date: string; // ISO format: YYYY-MM-DDTHH:mm:ss
+  category: string;
+  resolution_date?: string; // ISO format: YYYY-MM-DDTHH:mm:ss (opcional)
 }
 
 export interface Symptom {
   id: number;
+  name: string;
   description: string;
-  date: string;
-  time: string;
-  // Agregar otros campos que retorne el backend si los hay
+  severityLevel: number; // 1 - 5
+  onsetDate: string; // ISO format
+  category: string;
+  resolutionDate?: string; // ISO format (opcional)
 }
 
 export interface DeleteSymptonRequest {
@@ -97,17 +102,22 @@ export interface DeleteSymptonRequest {
 
 export interface CreateTreatmentRequest {
   name: string;
-  dose: string;
-  time: string; // Formato: HH:mm
-  // Agregar otros campos que requiera el backend
+  description: string;
+  frequency: string;
+  dosage: string;
+  startDate: string; // ISO format: YYYY-MM-DDTHH:mm:ss
+  endDate?: string; // ISO format: YYYY-MM-DDTHH:mm:ss (opcional)
+  isActive: boolean;
 }
 
 export interface Treatment {
   id: number;
   name: string;
-  dose: string;
-  time: string;
-  status?: 'Taken' | 'Upcoming';
-  // Agregar otros campos que retorne el backend si los hay
+  description: string;
+  frequency: string;
+  dosage: string;
+  startDate: string; // ISO format
+  endDate?: string; // ISO format (opcional)
+  isActive: boolean;
 }
 

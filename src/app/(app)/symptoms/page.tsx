@@ -45,9 +45,12 @@ export default function SymptomsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newSymptom, setNewSymptom] = useState({
+    name: '',
     description: '',
-    date: '',
-    time: '',
+    severity_level: 3,
+    onset_date: '',
+    category: '',
+    resolution_date: '',
   });
   const { toast } = useToast();
 
@@ -77,7 +80,14 @@ export default function SymptomsPage() {
   };
 
   const handleAddClick = () => {
-    setNewSymptom({ description: '', date: '', time: '' });
+    setNewSymptom({ 
+      name: '', 
+      description: '', 
+      severity_level: 3, 
+      onset_date: '', 
+      category: '',
+      resolution_date: '' 
+    });
     setIsDialogOpen(true);
   };
 
@@ -104,11 +114,39 @@ export default function SymptomsPage() {
   };
 
   const handleSave = async () => {
-    // Validar campos
-    if (!newSymptom.description || !newSymptom.date || !newSymptom.time) {
+    // Validar campos requeridos
+    if (!newSymptom.name || !newSymptom.description || !newSymptom.onset_date || !newSymptom.category) {
       toast({
         title: 'Error de validación',
-        description: 'Por favor completa todos los campos',
+        description: 'Por favor completa todos los campos requeridos',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validar límites del backend
+    if (newSymptom.name.length > 20) {
+      toast({
+        title: 'Error de validación',
+        description: 'El nombre no puede tener más de 20 caracteres',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (newSymptom.description.length > 50) {
+      toast({
+        title: 'Error de validación',
+        description: 'La descripción no puede tener más de 50 caracteres',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (newSymptom.category.length > 30) {
+      toast({
+        title: 'Error de validación',
+        description: 'La categoría no puede tener más de 30 caracteres',
         variant: 'destructive',
       });
       return;
@@ -116,10 +154,23 @@ export default function SymptomsPage() {
 
     try {
       setIsSaving(true);
+      
+      // Convertir las fechas al formato ISO que espera el backend
+      const onsetDateISO = newSymptom.onset_date 
+        ? new Date(newSymptom.onset_date).toISOString() 
+        : '';
+      
+      const resolutionDateISO = newSymptom.resolution_date 
+        ? new Date(newSymptom.resolution_date).toISOString() 
+        : undefined;
+      
       await symptomsApi.create({
+        name: newSymptom.name,
         description: newSymptom.description,
-        date: newSymptom.date,
-        time: newSymptom.time,
+        severity_level: newSymptom.severity_level,
+        onset_date: onsetDateISO,
+        category: newSymptom.category,
+        resolution_date: resolutionDateISO,
       });
       toast({
         title: 'Éxito',
@@ -169,8 +220,10 @@ export default function SymptomsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[50px]">#</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Time</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Severity</TableHead>
+                <TableHead>Onset Date</TableHead>
                 <TableHead>Description</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -178,7 +231,7 @@ export default function SymptomsPage() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">
+                  <TableCell colSpan={7} className="text-center py-8">
                     <Loader2 className="h-6 w-6 animate-spin mx-auto" />
                     <p className="mt-2 text-muted-foreground">
                       Cargando síntomas...
@@ -187,36 +240,50 @@ export default function SymptomsPage() {
                 </TableRow>
               ) : symptoms.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     No hay síntomas registrados
                   </TableCell>
                 </TableRow>
               ) : (
-                symptoms.map((symptom) => (
-                  <TableRow key={symptom.id}>
-                    <TableCell>{symptom.id}</TableCell>
-                    <TableCell>{symptom.date}</TableCell>
-                    <TableCell>{symptom.time}</TableCell>
-                    <TableCell>{symptom.description}</TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          <DropdownMenuItem
-                            onClick={() => handleDeleteClick(symptom.id)}
-                            className="text-destructive"
-                          >
-                            Eliminar
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))
+                symptoms.map((symptom) => {
+                  const getSeverityBadge = (level: number) => {
+                    if (level <= 2) return 'bg-green-500';
+                    if (level <= 3) return 'bg-yellow-500';
+                    return 'bg-red-500';
+                  };
+
+                  return (
+                    <TableRow key={symptom.id}>
+                      <TableCell>{symptom.id}</TableCell>
+                      <TableCell className="font-medium">{symptom.name}</TableCell>
+                      <TableCell>{symptom.category}</TableCell>
+                      <TableCell>
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium text-white ${getSeverityBadge(symptom.severityLevel)}`}>
+                          {symptom.severityLevel}
+                        </span>
+                      </TableCell>
+                      <TableCell>{new Date(symptom.onsetDate).toLocaleString()}</TableCell>
+                      <TableCell>{symptom.description}</TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <DropdownMenuItem
+                              onClick={() => handleDeleteClick(symptom.id)}
+                              className="text-destructive"
+                            >
+                              Eliminar
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>
@@ -233,7 +300,25 @@ export default function SymptomsPage() {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="name">Name (máx. 20 caracteres)</Label>
+              <Input
+                id="name"
+                value={newSymptom.name}
+                onChange={(e) =>
+                  setNewSymptom({
+                    ...newSymptom,
+                    name: e.target.value,
+                  })
+                }
+                placeholder="Enter symptom name"
+                maxLength={20}
+              />
+              <p className="text-xs text-muted-foreground">
+                {newSymptom.name.length}/20 caracteres
+              </p>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="description">Description (máx. 50 caracteres)</Label>
               <Textarea
                 id="description"
                 value={newSymptom.description}
@@ -243,32 +328,67 @@ export default function SymptomsPage() {
                     description: e.target.value,
                   })
                 }
-                placeholder="Enter a description"
+                placeholder="Enter a detailed description"
+                maxLength={50}
               />
+              <p className="text-xs text-muted-foreground">
+                {newSymptom.description.length}/50 caracteres
+              </p>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="category">Category (máx. 30 caracteres)</Label>
+              <Input
+                id="category"
+                value={newSymptom.category}
+                onChange={(e) =>
+                  setNewSymptom({
+                    ...newSymptom,
+                    category: e.target.value,
+                  })
+                }
+                placeholder="Enter category (e.g., Respiratory, Digestive)"
+                maxLength={30}
+              />
+              <p className="text-xs text-muted-foreground">
+                {newSymptom.category.length}/30 caracteres
+              </p>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="date">Date</Label>
+                <Label htmlFor="severity">Severity Level (1-5)</Label>
                 <Input
-                  id="date"
-                  type="date"
-                  value={newSymptom.date}
+                  id="severity"
+                  type="number"
+                  min="1"
+                  max="5"
+                  value={newSymptom.severity_level}
                   onChange={(e) =>
-                    setNewSymptom({ ...newSymptom, date: e.target.value })
+                    setNewSymptom({ ...newSymptom, severity_level: parseInt(e.target.value) || 1 })
                   }
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="time">Time</Label>
+                <Label htmlFor="onset_date">Onset Date & Time</Label>
                 <Input
-                  id="time"
-                  type="time"
-                  value={newSymptom.time}
+                  id="onset_date"
+                  type="datetime-local"
+                  value={newSymptom.onset_date}
                   onChange={(e) =>
-                    setNewSymptom({ ...newSymptom, time: e.target.value })
+                    setNewSymptom({ ...newSymptom, onset_date: e.target.value })
                   }
                 />
               </div>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="resolution_date">Resolution Date & Time (opcional)</Label>
+              <Input
+                id="resolution_date"
+                type="datetime-local"
+                value={newSymptom.resolution_date}
+                onChange={(e) =>
+                  setNewSymptom({ ...newSymptom, resolution_date: e.target.value })
+                }
+              />
             </div>
           </div>
           <DialogFooter>

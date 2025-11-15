@@ -33,34 +33,29 @@ function saveUserToStorage(profile: UserProfile): void {
 }
 
 export function useUser() {
-  // Inicializar con datos de localStorage si están disponibles (carga inmediata)
-  const [user, setUser] = useState<UserProfile | null>(() => getUserFromStorage());
+  // Inicializar sin datos para forzar la carga desde el backend
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   const fetchUser = useCallback(async () => {
-    // Si ya tenemos datos en localStorage, no mostrar loading
-    const hasStoredData = getUserFromStorage() !== null;
-    
     try {
-      if (!hasStoredData) {
-        setLoading(true);
-      }
+      setLoading(true);
       setError(null);
       
       const userData = await getCurrentUserProfile();
-      console.log('Usuario cargado en hook:', userData);
+      console.log('✅ Usuario cargado desde backend:', userData);
       setUser(userData);
       saveUserToStorage(userData);
     } catch (err) {
-      console.error('Error al obtener usuario:', err);
+      console.error('❌ Error al obtener usuario:', err);
       const error = err instanceof Error ? err : new Error('Error al obtener usuario');
       setError(error);
       
-      // Si hay datos guardados, mantenerlos aunque haya error
+      // Como último recurso, intentar usar datos guardados
       const storedUser = getUserFromStorage();
       if (storedUser) {
-        console.log('Manteniendo datos guardados a pesar del error');
+        console.log('⚠️ Usando datos de localStorage como fallback');
         setUser(storedUser);
       } else {
         setUser(null);

@@ -34,11 +34,16 @@ export function useAuth(): UseAuthReturn {
     setError(null);
 
     try {
+      // Limpiar perfil de usuario antiguo antes de hacer login
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('user_profile');
+      }
+      
       const response = await apiLogin(credentials);
       
       // Guardar tokens en localStorage
       storeTokens(response.accessToken, response.refreshToken);
-      console.log('Tokens almacenados en localStorage', response.accessToken, response.refreshToken);
+      console.log('✅ Tokens stored. User profile will be fetched from backend.');
 
       // Redirigir al dashboard
       router.push('/dashboard');

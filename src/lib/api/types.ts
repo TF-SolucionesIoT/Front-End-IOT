@@ -50,6 +50,7 @@ export interface UserProfile {
   username: string;
   phoneNumber?: string;
   birthday?: string;
+  typeOfUser?: string; // 'PATIENT' | 'CAREGIVER'
 }
 
 // ==================== DISTURBANCES (Alteraciones) ====================

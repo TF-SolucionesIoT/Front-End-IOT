@@ -33,6 +33,7 @@ export async function getCurrentUserProfile(): Promise<UserProfile> {
       gender: data.gender || '',
       phoneNumber: data.phoneNumber,
       birthday: data.birthday,
+      typeOfUser: data.typeOfUser, // 'PATIENT' o 'CAREGIVER'
     };
 
     // Guardar en localStorage para uso futuro

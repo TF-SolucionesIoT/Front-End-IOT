@@ -38,6 +38,7 @@ export function useAuth(): UseAuthReturn {
       
       // Guardar tokens en localStorage
       storeTokens(response.accessToken, response.refreshToken);
+      console.log('Tokens almacenados en localStorage', response.accessToken, response.refreshToken);
 
       // Redirigir al dashboard
       router.push('/dashboard');

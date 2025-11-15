@@ -14,8 +14,9 @@ import { Logo } from "@/components/logo";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { clearTokens } from "@/lib/api/client";
 
 export default function LoginPage() {
   const { login, isLoading, error, clearError } = useAuth();
@@ -23,6 +24,13 @@ export default function LoginPage() {
     username: '',
     password: '',
   });
+
+  // limpiar localStorage al cargar el componente
+  useEffect(() => {
+    clearTokens();
+  }, []);
+
+  
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -36,6 +44,7 @@ export default function LoginPage() {
     } catch {
       // Error ya manejado por useAuth
     }
+
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

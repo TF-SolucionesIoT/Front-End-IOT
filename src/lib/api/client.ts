@@ -107,4 +107,8 @@ export function clearTokens(): void {
   if (typeof window === 'undefined') return;
   localStorage.removeItem('accessToken');
   localStorage.removeItem('refreshToken');
+
+  localStorage.removeItem('user_profile');
+
+  //localStorage.clear(); // Si se quiere limpiar todo el localStorage
 }

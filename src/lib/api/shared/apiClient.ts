@@ -1,7 +1,8 @@
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
 // Cliente API centralizado con manejo de errores
-// Si NEXT_PUBLIC_API_URL está vacío, usará el proxy de Next.js (sin CORS)
-// Si está definido, hará peticiones directas al backend (necesita CORS configurado)
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
 export class ApiError extends Error {
   constructor(
@@ -15,25 +16,52 @@ export class ApiError extends Error {
   }
 }
 
+export interface ApiRequestOptions extends RequestInit {
+  requiresAuth?: boolean;
+}
+
 export async function apiRequest<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: ApiRequestOptions = {}
 ): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint}`;
+  // Remove leading slash if present to avoid double slashes if base has trailing slash
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const url = `${API_BASE_URL}${cleanEndpoint}`;
   
-  const config: RequestInit = {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
+  const { requiresAuth = true, ...fetchOptions } = options;
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
   };
+
+  if (requiresAuth) {
+    const token = getStoredToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+  }
+
+  const config: RequestInit = {
+    ...fetchOptions,
+    headers,
+  };
+
+  console.log(`📡 API Request: ${options.method || 'GET'} ${url}`);
 
   try {
     const response = await fetch(url, config);
 
-    // Si la respuesta no es OK, manejar el error
     if (!response.ok) {
+      // Handle 401 Unauthorized
+      if (response.status === 401) {
+        console.warn('🔒 401 Unauthorized - Clearing tokens');
+        clearTokens();
+        if (typeof window !== 'undefined' && !window.location.pathname.includes('/auth')) {
+           window.location.href = '/auth/login';
+        }
+      }
+
       let errorMessage = 'An error occurred';
       let errorDetails = null;
 
@@ -42,7 +70,6 @@ export async function apiRequest<T>(
         errorMessage = errorData.message || errorData.error || errorMessage;
         errorDetails = errorData;
       } catch {
-        // Si no se puede parsear el error como JSON, usar mensaje genérico
         errorMessage = response.statusText || errorMessage;
       }
 
@@ -54,37 +81,33 @@ export async function apiRequest<T>(
       );
     }
 
-    // Parsear respuesta exitosa
-    const data = await response.json();
-    return data;
+    // Handle empty responses (like DELETE)
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+        return await response.json();
+    }
+    return {} as T;
+
   } catch (error) {
-    // Si ya es un ApiError, re-lanzarlo
+    console.error('❌ API Error:', error);
     if (error instanceof ApiError) {
       throw error;
     }
 
-    // Error de red o conexión
     if (error instanceof TypeError) {
       throw new ApiError(
-        'Network error. Please check your connection and ensure the backend server is running.',
+        'Network error. Please check your connection.',
         undefined,
         'NETWORK_ERROR'
       );
     }
 
-    // Error desconocido
     throw new ApiError(
       'An unexpected error occurred',
       undefined,
       'UNKNOWN_ERROR'
     );
   }
-}
-
-export function getAuthHeaders(token: string): HeadersInit {
-  return {
-    Authorization: `Bearer ${token}`,
-  };
 }
 
 export function getStoredToken(): string | null {
@@ -107,8 +130,5 @@ export function clearTokens(): void {
   if (typeof window === 'undefined') return;
   localStorage.removeItem('accessToken');
   localStorage.removeItem('refreshToken');
-
   localStorage.removeItem('user_profile');
-
-  //localStorage.clear(); // Si se quiere limpiar todo el localStorage
 }

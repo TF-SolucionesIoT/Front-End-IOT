@@ -36,8 +36,8 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { symptomsApi } from '@/lib/api/symptoms';
-import type { Symptom } from '@/lib/api/types';
+import { symptomsApi } from '@/lib/api';
+import type { Symptom } from '@/lib/api';
 
 export default function SymptomsPage() {
   const [symptoms, setSymptoms] = useState<Symptom[]>([]);

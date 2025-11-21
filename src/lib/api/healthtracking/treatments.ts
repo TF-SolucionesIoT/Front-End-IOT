@@ -1,4 +1,4 @@
-import { apiRequest } from './config';
+import { apiRequest } from '../shared/apiClient';
 import type { CreateTreatmentRequest, Treatment } from './types';
 
 /**
@@ -10,7 +10,7 @@ export const treatmentsApi = {
    * POST /api/records/treatments
    */
   create: async (data: CreateTreatmentRequest): Promise<Treatment> => {
-    return apiRequest<Treatment>('/treatments', {
+    return apiRequest<Treatment>('/records/treatments', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -21,9 +21,8 @@ export const treatmentsApi = {
    * GET /api/records/treatments/all
    */
   getAll: async (): Promise<Treatment[]> => {
-    return apiRequest<Treatment[]>('/treatments/all', {
+    return apiRequest<Treatment[]>('/records/treatments/all', {
       method: 'GET',
     });
   },
 };
-

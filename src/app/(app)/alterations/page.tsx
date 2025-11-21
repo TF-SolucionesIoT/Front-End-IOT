@@ -36,8 +36,8 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { disturbancesApi } from '@/lib/api/disturbances';
-import type { Disturbance } from '@/lib/api/types';
+import { disturbancesApi } from '@/lib/api';
+import type { Disturbance } from '@/lib/api';
 
 export default function AlterationsPage() {
   const [alterations, setAlterations] = useState<Disturbance[]>([]);

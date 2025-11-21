@@ -29,8 +29,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
-import { treatmentsApi } from '@/lib/api/treatments';
-import type { Treatment } from '@/lib/api/types';
+import { treatmentsApi } from '@/lib/api';
+import type { Treatment } from '@/lib/api';
 
 export default function TreatmentsPage() {
   const [treatments, setTreatments] = useState<Treatment[]>([]);

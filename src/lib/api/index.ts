@@ -1,10 +1,16 @@
 /**
  * Exportaciones centralizadas de los servicios API
+ * Sigue la estructura DDD del backend
  */
-export * from './config';
-export * from './types';
-export * from './auth';
-export * from './disturbances';
-export * from './symptoms';
-export * from './treatments';
 
+// Shared
+export * from './shared/apiClient';
+export * from './types';
+
+// Bounded Contexts
+export * from './iam/auth';
+export * from './iam/invite';
+export * from './profiles/profile';
+export * from './healthtracking/disturbances';
+export * from './healthtracking/symptoms';
+export * from './healthtracking/treatments';

@@ -1,4 +1,4 @@
-import { apiRequest } from './config';
+import { apiRequest } from '../shared/apiClient';
 import type {
   CreateSymptonRequest,
   Symptom,
@@ -14,7 +14,7 @@ export const symptomsApi = {
    * POST /api/records/symptons
    */
   create: async (data: CreateSymptonRequest): Promise<Symptom> => {
-    return apiRequest<Symptom>('/symptons', {
+    return apiRequest<Symptom>('/records/symptons', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -25,7 +25,7 @@ export const symptomsApi = {
    * GET /api/records/symptons/all
    */
   getAll: async (): Promise<Symptom[]> => {
-    return apiRequest<Symptom[]>('/symptons/all', {
+    return apiRequest<Symptom[]>('/records/symptons/all', {
       method: 'GET',
     });
   },
@@ -36,10 +36,9 @@ export const symptomsApi = {
    */
   delete: async (symptonId: number): Promise<void> => {
     const data: DeleteSymptonRequest = { symptonId };
-    await apiRequest<void>('/symptons', {
+    await apiRequest<void>('/records/symptons', {
       method: 'DELETE',
       body: JSON.stringify(data),
     });
   },
 };
-

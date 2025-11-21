@@ -1,4 +1,4 @@
-import { apiRequest } from './config';
+import { apiRequest } from '../shared/apiClient';
 import type { UserProfile } from './types';
 
 /**
@@ -8,19 +8,10 @@ import type { UserProfile } from './types';
 export async function getCurrentUserProfile(): Promise<UserProfile> {
   try {
     // Llamar al endpoint del backend que devuelve el perfil completo
-    const response = await fetch('http://localhost:8080/api/auth/profile/me', {
+    const data = await apiRequest<any>('/auth/profile/me', {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${typeof window !== 'undefined' ? localStorage.getItem('accessToken') : ''}`,
-      },
     });
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch user profile: ${response.status}`);
-    }
-
-    const data = await response.json();
     console.log('✅ User profile loaded from backend:', data);
 
     // Mapear el response del backend al tipo UserProfile

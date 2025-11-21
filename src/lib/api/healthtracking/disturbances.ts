@@ -1,4 +1,4 @@
-import { apiRequest } from './config';
+import { apiRequest } from '../shared/apiClient';
 import type {
   CreateDisturbanceRequest,
   Disturbance,
@@ -16,7 +16,7 @@ export const disturbancesApi = {
   create: async (
     data: CreateDisturbanceRequest
   ): Promise<Disturbance> => {
-    return apiRequest<Disturbance>('/disturbances', {
+    return apiRequest<Disturbance>('/records/disturbances', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -27,7 +27,7 @@ export const disturbancesApi = {
    * GET /api/records/disturbances/all
    */
   getAll: async (): Promise<Disturbance[]> => {
-    return apiRequest<Disturbance[]>('/disturbances/all', {
+    return apiRequest<Disturbance[]>('/records/disturbances/all', {
       method: 'GET',
     });
   },
@@ -37,10 +37,9 @@ export const disturbancesApi = {
    * DELETE /api/records/disturbances
    */
   delete: async (disturbanceId: number): Promise<void> => {
-    await apiRequest<void>('/disturbances', {
+    await apiRequest<void>('/records/disturbances', {
       method: 'DELETE',
       body: JSON.stringify(disturbanceId),
     });
   },
 };
-

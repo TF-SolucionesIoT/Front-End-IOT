@@ -16,7 +16,7 @@ import { AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { clearTokens } from "@/lib/api/client";
+import { clearTokens } from "@/lib/api";
 
 export default function LoginPage() {
   const { login, isLoading, error, clearError } = useAuth();

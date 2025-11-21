@@ -2,15 +2,13 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { login as apiLogin, registerPatient, registerCaregiver } from '@/lib/api/auth';
-import { storeTokens, clearTokens } from '@/lib/api/client';
+import { login as apiLogin, registerPatient, registerCaregiver, storeTokens, clearTokens, ApiError } from '@/lib/api';
 import type {
   LoginRequest,
   RegisterPatientRequest,
   RegisterCaregiverRequest,
   UserType,
-} from '@/lib/api/types';
-import { ApiError } from '@/lib/api/client';
+} from '@/lib/api';
 
 interface UseAuthReturn {
   login: (credentials: LoginRequest) => Promise<void>;

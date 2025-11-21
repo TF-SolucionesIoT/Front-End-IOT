@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { getCurrentUserProfile } from '@/lib/api/profile';
-import { getStoredToken } from '@/lib/api/client';
-import type { UserProfile } from '@/lib/api/types';
+import { getCurrentUserProfile, getStoredToken } from '@/lib/api';
+import type { UserProfile } from '@/lib/api';
 
 /**
  * Obtiene el perfil del usuario desde localStorage de forma síncrona

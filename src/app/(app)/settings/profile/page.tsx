@@ -16,7 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useUser } from '@/hooks/use-user';
 import { useToast } from '@/hooks/use-toast';
-import { inviteApi } from '@/lib/api/invite';
+import { inviteApi } from '@/lib/api';
 import { Copy, Check, UserPlus, Link2 } from 'lucide-react';
 import {
   Dialog,

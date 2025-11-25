@@ -14,3 +14,4 @@ export * from './profiles/profile';
 export * from './healthtracking/disturbances';
 export * from './healthtracking/symptoms';
 export * from './healthtracking/treatments';
+export * from './contacts/contacts';

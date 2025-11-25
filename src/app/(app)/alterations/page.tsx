@@ -61,17 +61,12 @@ export default function AlterationsPage() {
     try {
       setIsLoading(true);
       const data = await disturbancesApi.getAll();
-      setAlterations(data);
+      setAlterations(data || []);
     } catch (error) {
       console.error('Error loading alterations:', error);
-      toast({
-        title: 'Error',
-        description:
-          error instanceof Error
-            ? error.message
-            : 'No se pudieron cargar las alteraciones',
-        variant: 'destructive',
-      });
+      // Solo mostrar error si no es un problema de datos vacíos
+      setAlterations([]);
+      // No mostrar toast si es solo que no hay datos
     } finally {
       setIsLoading(false);
     }

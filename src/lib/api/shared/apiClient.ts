@@ -48,6 +48,10 @@ export async function apiRequest<T>(
   };
 
   console.log(`📡 API Request: ${options.method || 'GET'} ${url}`);
+  console.log('📋 Headers:', headers);
+  if (fetchOptions.body) {
+    console.log('📦 Body:', fetchOptions.body);
+  }
 
   try {
     const response = await fetch(url, config);
@@ -62,11 +66,18 @@ export async function apiRequest<T>(
         }
       }
 
+      // Handle 403 Forbidden
+      if (response.status === 403) {
+        console.error('🚫 403 Forbidden - Check token validity and permissions');
+        console.log('Token present:', !!getStoredToken());
+      }
+
       let errorMessage = 'An error occurred';
       let errorDetails = null;
 
       try {
         const errorData = await response.json();
+        console.error('❌ Error response:', errorData);
         errorMessage = errorData.message || errorData.error || errorMessage;
         errorDetails = errorData;
       } catch {

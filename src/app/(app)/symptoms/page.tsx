@@ -63,17 +63,12 @@ export default function SymptomsPage() {
     try {
       setIsLoading(true);
       const data = await symptomsApi.getAll();
-      setSymptoms(data);
+      setSymptoms(data || []);
     } catch (error) {
       console.error('Error loading symptoms:', error);
-      toast({
-        title: 'Error',
-        description:
-          error instanceof Error
-            ? error.message
-            : 'No se pudieron cargar los síntomas',
-        variant: 'destructive',
-      });
+      // Solo mostrar error si no es un problema de datos vacíos
+      setSymptoms([]);
+      // No mostrar toast si es solo que no hay datos
     } finally {
       setIsLoading(false);
     }

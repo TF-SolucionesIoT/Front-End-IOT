@@ -26,6 +26,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { ChangePasswordDialog } from '@/components/change-password-dialog';
 
 export default function ProfileSettingsPage() {
   const { user, loading } = useUser();
@@ -45,6 +46,9 @@ export default function ProfileSettingsPage() {
   const [isUsingCode, setIsUsingCode] = useState(false);
   const [codeToUse, setCodeToUse] = useState('');
   const [showUseCodeDialog, setShowUseCodeDialog] = useState(false);
+  
+  // Estado para dialog de cambio de contraseña
+  const [showChangePasswordDialog, setShowChangePasswordDialog] = useState(false);
 
   // Actualizar el estado cuando se carga el usuario
   useEffect(() => {
@@ -246,7 +250,13 @@ export default function ProfileSettingsPage() {
                   Editar Perfil
                 </Button>
               )}
-              <Button variant="outline">Cambiar Contraseña</Button>
+              <Button 
+                variant="outline"
+                onClick={() => setShowChangePasswordDialog(true)}
+                type="button"
+              >
+                Cambiar Contraseña
+              </Button>
             </div>
           </form>
         </CardContent>
@@ -375,6 +385,12 @@ export default function ProfileSettingsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog para cambiar contraseña */}
+      <ChangePasswordDialog
+        open={showChangePasswordDialog}
+        onOpenChange={setShowChangePasswordDialog}
+      />
     </div>
   );
 }

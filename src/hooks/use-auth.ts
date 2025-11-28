@@ -32,9 +32,11 @@ export function useAuth(): UseAuthReturn {
     setError(null);
 
     try {
-      // Limpiar perfil de usuario antiguo antes de hacer login
+      // Limpiar TODOS los datos del usuario anterior antes de hacer login
       if (typeof window !== 'undefined') {
         localStorage.removeItem('user_profile');
+        localStorage.removeItem('caregiver_patient_ids');
+        console.log('🧹 Previous user data cleared before login');
       }
       
       const response = await apiLogin(credentials);

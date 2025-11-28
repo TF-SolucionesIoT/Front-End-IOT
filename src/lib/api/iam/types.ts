@@ -42,4 +42,5 @@ export interface InviteCodeResponse {
 
 export interface UseCodeResponse {
   message: string;
+  patientId: number;
 }

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Authentication</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .success { color: green; }
+        .error { color: red; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Authentication Debug Tool</h1>
+    
+    <div class="section">
+        <h2>Token Info</h2>
+        <button onclick="checkToken()">Check Token</button>
+        <button onclick="clearStorage()">Clear Storage</button>
+        <div id="tokenInfo"></div>
+    </div>
+
+    <div class="section">
+        <h2>Test Contact Creation</h2>
+        <button onclick="testCreateContact()">Test POST /api/contacts/emergencies</button>
+        <div id="testResult"></div>
+    </div>
+
+    <script>
+        function checkToken() {
+            const token = localStorage.getItem('accessToken');
+            const refreshToken = localStorage.getItem('refreshToken');
+            const userProfile = localStorage.getItem('user_profile');
+            
+            let html = '<h3>LocalStorage Contents:</h3>';
+            html += '<p><strong>Access Token:</strong> ' + (token ? '✓ Present' : '✗ Missing') + '</p>';
+            if (token) {
+                html += '<pre>' + token.substring(0, 50) + '...</pre>';
+                
+                // Try to decode JWT
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    html += '<p><strong>Token Payload:</strong></p>';
+                    html += '<pre>' + JSON.stringify(payload, null, 2) + '</pre>';
+                    
+                    // Check expiration
+                    if (payload.exp) {
+                        const expDate = new Date(payload.exp * 1000);
+                        const isExpired = expDate < new Date();
+                        html += '<p><strong>Expires:</strong> ' + expDate.toLocaleString() + 
+                               ' <span class="' + (isExpired ? 'error' : 'success') + '">' +
+                               (isExpired ? '(EXPIRED)' : '(Valid)') + '</span></p>';
+                    }
+                } catch (e) {
+                    html += '<p class="error">Could not decode token</p>';
+                }
+            }
+            
+            html += '<p><strong>Refresh Token:</strong> ' + (refreshToken ? '✓ Present' : '✗ Missing') + '</p>';
+            html += '<p><strong>User Profile:</strong> ' + (userProfile ? '✓ Present' : '✗ Missing') + '</p>';
+            
+            if (userProfile) {
+                try {
+                    const profile = JSON.parse(userProfile);
+                    html += '<pre>' + JSON.stringify(profile, null, 2) + '</pre>';
+                } catch (e) {
+                    html += '<p class="error">Could not parse user profile</p>';
+                }
+            }
+            
+            document.getElementById('tokenInfo').innerHTML = html;
+        }
+
+        function clearStorage() {
+            localStorage.clear();
+            alert('LocalStorage cleared!');
+            checkToken();
+        }
+
+        async function testCreateContact() {
+            const token = localStorage.getItem('accessToken');
+            const userProfile = localStorage.getItem('user_profile');
+            
+            if (!token) {
+                document.getElementById('testResult').innerHTML = 
+                    '<p class="error">No access token found! Please login first.</p>';
+                return;
+            }
+            
+            let patientId = 1;
+            if (userProfile) {
+                try {
+                    const profile = JSON.parse(userProfile);
+                    patientId = profile.id || 1;
+                } catch (e) {}
+            }
+            
+            const testContact = {
+                name: "Test Contact",
+                phoneNumber: "+1234567890",
+                connection: "Test",
+                patientId: patientId
+            };
+            
+            document.getElementById('testResult').innerHTML = '<p>Testing...</p>';
+            
+            try {
+                const response = await fetch('http://localhost:8080/api/contacts/emergencies', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(testContact)
+                });
+                
+                let html = '<h3>Response:</h3>';
+                html += '<p><strong>Status:</strong> ' + response.status + ' ' + response.statusText + '</p>';
+                
+                const contentType = response.headers.get('content-type');
+                let data;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                    html += '<p><strong>Response Data:</strong></p>';
+                    html += '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                } else {
+                    const text = await response.text();
+                    html += '<p><strong>Response Text:</strong></p>';
+                    html += '<pre>' + text + '</pre>';
+                }
+                
+                if (response.ok) {
+                    html = '<p class="success">✓ Success!</p>' + html;
+                } else {
+                    html = '<p class="error">✗ Error</p>' + html;
+                }
+                
+                document.getElementById('testResult').innerHTML = html;
+            } catch (error) {
+                document.getElementById('testResult').innerHTML = 
+                    '<p class="error">Error: ' + error.message + '</p>';
+            }
+        }
+        
+        // Auto-check token on load
+        window.onload = checkToken;
+    </script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -8,8 +9,9 @@ import {
   CardTitle,
   CardFooter,
 } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { VitalsChart } from '@/components/vitals-chart';
-import { Heart } from 'lucide-react';
+import { Heart, Users } from 'lucide-react';
 import { useUser } from '@/hooks/use-user';
 
 const vitalsData = {
@@ -25,6 +27,7 @@ const vitalsData = {
 
 export default function DashboardPage() {
   const { user, loading, error } = useUser();
+  const router = useRouter();
   
   // Debug: mostrar información en consola
   useEffect(() => {
@@ -33,6 +36,7 @@ export default function DashboardPage() {
       console.log('firstName:', user.firstName);
       console.log('lastName:', user.lastName);
       console.log('username:', user.username);
+      console.log('typeOfUser:', user.typeOfUser);
     }
     if (error) {
       console.error('Error en dashboard:', error);
@@ -44,6 +48,8 @@ export default function DashboardPage() {
         ? `${user.firstName} ${user.lastName}`.trim() 
         : user.firstName || user.lastName || user.username || 'Usuario')
     : 'Usuario';
+
+  const isCaregiver = user?.typeOfUser === 'CAREGIVER';
 
   if (error && !loading) {
     console.error('Error al cargar usuario:', error.message);
@@ -59,6 +65,21 @@ export default function DashboardPage() {
           Error: {error.message}
         </p>
       )}
+      
+      {/* Botón para Cuidadores */}
+      {isCaregiver && !loading && (
+        <div className="w-full max-w-sm">
+          <Button 
+            onClick={() => router.push('/caregiver/patient')}
+            className="w-full"
+            size="lg"
+          >
+            <Users className="mr-2 h-5 w-5" />
+            Datos del Paciente
+          </Button>
+        </div>
+      )}
+
       <div className="w-full max-w-sm">
         <Card className="shadow-card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">

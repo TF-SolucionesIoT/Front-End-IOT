@@ -142,4 +142,6 @@ export function clearTokens(): void {
   localStorage.removeItem('accessToken');
   localStorage.removeItem('refreshToken');
   localStorage.removeItem('user_profile');
+  localStorage.removeItem('caregiver_patient_ids'); // Se recuperará del backend al volver a entrar
+  console.log('🧹 User session cleared from localStorage');
 }

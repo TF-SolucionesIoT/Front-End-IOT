@@ -20,8 +20,28 @@ export const inviteApi = {
    * POST /api/invite/use/{code}
    */
   useCode: async (code: string): Promise<UseCodeResponse> => {
-    return apiRequest<UseCodeResponse>(`/invite/use/${code}`, {
+    const response = await apiRequest<UseCodeResponse>(`/invite/use/${code}`, {
       method: 'POST',
     });
+
+    // Guardar el patientId en localStorage cuando se vincula exitosamente
+    if (response && response.patientId && typeof window !== 'undefined') {
+      try {
+        // Obtener IDs existentes
+        const storedIds = localStorage.getItem('caregiver_patient_ids');
+        const patientIds: number[] = storedIds ? JSON.parse(storedIds) : [];
+        
+        // Agregar el nuevo patientId si no existe
+        if (!patientIds.includes(response.patientId)) {
+          patientIds.push(response.patientId);
+          localStorage.setItem('caregiver_patient_ids', JSON.stringify(patientIds));
+          console.log('✅ Patient ID saved to localStorage:', response.patientId);
+        }
+      } catch (error) {
+        console.error('Error saving patient ID:', error);
+      }
+    }
+
+    return response;
   },
 };

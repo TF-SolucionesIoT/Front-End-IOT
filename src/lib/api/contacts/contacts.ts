@@ -45,6 +45,19 @@ export async function createEmergencyContact(
     );
 
     console.log('✅ Emergency contact created:', data);
+
+    // Sanity check: ensure backend created the contact for the same patientId we requested
+    if (typeof contact.patientId !== 'undefined' && typeof data.patientId !== 'undefined') {
+      if (data.patientId !== contact.patientId) {
+        console.error(
+          `⚠️ PatientId mismatch when creating emergency contact. Requested: ${contact.patientId}, Created: ${data.patientId}`
+        );
+        throw new Error(
+          `PatientId mismatch: requested ${contact.patientId}, but created ${data.patientId}`
+        );
+      }
+    }
+
     return data;
   } catch (error) {
     console.error('❌ Error creating emergency contact:', error);

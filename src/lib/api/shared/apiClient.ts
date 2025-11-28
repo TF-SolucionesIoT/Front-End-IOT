@@ -49,6 +49,13 @@ export async function apiRequest<T>(
 
   console.log(`📡 API Request: ${options.method || 'GET'} ${url}`);
   console.log('📋 Headers:', headers);
+  if (requiresAuth) {
+    const token = getStoredToken();
+    console.log('🔑 Token present:', !!token);
+    if (token) {
+      console.log('🔑 Token preview:', token.substring(0, 20) + '...');
+    }
+  }
   if (fetchOptions.body) {
     console.log('📦 Body:', fetchOptions.body);
   }
@@ -78,7 +85,7 @@ export async function apiRequest<T>(
       try {
         const errorData = await response.json();
         console.error('❌ Error response:', errorData);
-        errorMessage = errorData.message || errorData.error || errorMessage;
+        errorMessage = errorData.message || errorData.error || errorData.detail || errorMessage;
         errorDetails = errorData;
       } catch {
         errorMessage = response.statusText || errorMessage;

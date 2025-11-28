@@ -32,6 +32,11 @@ export interface RegisterCaregiverRequest {
   phoneNumber: string;
 }
 
+export interface ChangePasswordRequest {
+  password: string;
+  newPassword: string;
+}
+
 export type UserType = 'patient' | 'caregiver';
 
 // Invite types

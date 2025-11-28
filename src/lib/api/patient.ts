@@ -7,6 +7,7 @@ import { apiRequest } from './shared/apiClient';
 
 export interface PatientHealthRecords {
   patientId: number;
+  patientName: string;
   disturbances: Disturbance[];
   symptons: Sympton[];
   treatments: Treatment[];
@@ -14,30 +15,31 @@ export interface PatientHealthRecords {
 
 export interface Disturbance {
   id: number;
-  disturbanceName: string;
+  name: string;
   description: string;
-  severity: string;
-  diagnosisDate: string;
-  patientId: number;
+  severityLevel: number;
+  onsetDate: string;
 }
 
 export interface Sympton {
   id: number;
-  symptonName: string;
+  name: string;
   description: string;
-  severity: string;
+  severityLevel: number;
   onsetDate: string;
-  patientId: number;
+  category: string;
+  resolutionDate: string | null;
 }
 
 export interface Treatment {
   id: number;
-  treatmentName: string;
+  name: string;
   description: string;
+  frequency: string;
+  dosage: string;
   startDate: string;
   endDate?: string;
-  status: string;
-  patientId: number;
+  isActive: boolean;
 }
 
 export interface EmergencyContact {

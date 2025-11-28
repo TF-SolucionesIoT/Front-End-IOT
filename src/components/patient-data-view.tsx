@@ -72,16 +72,16 @@ export default function PatientDataView({ patientId }: PatientDataViewProps) {
     );
   }
 
-  const getSeverityColor = (severity: string) => {
-    const colors: Record<string, string> = {
-      low: 'bg-green-100 text-green-800',
-      medium: 'bg-yellow-100 text-yellow-800',
-      high: 'bg-red-100 text-red-800',
-      mild: 'bg-green-100 text-green-800',
-      moderate: 'bg-yellow-100 text-yellow-800',
-      severe: 'bg-red-100 text-red-800',
-    };
-    return colors[severity?.toLowerCase()] || 'bg-gray-100 text-gray-800';
+  const getSeverityColor = (severityLevel: number) => {
+    if (severityLevel <= 2) return 'bg-green-100 text-green-800';
+    if (severityLevel <= 3) return 'bg-yellow-100 text-yellow-800';
+    return 'bg-red-100 text-red-800';
+  };
+
+  const getSeverityLabel = (severityLevel: number) => {
+    if (severityLevel <= 2) return 'Leve';
+    if (severityLevel <= 3) return 'Moderado';
+    return 'Severo';
   };
 
   return (
@@ -155,18 +155,20 @@ export default function PatientDataView({ patientId }: PatientDataViewProps) {
                 <div key={disturbance.id} className="rounded-lg border p-4">
                   <div className="flex items-start justify-between mb-2">
                     <h4 className="font-semibold">
-                      {disturbance.disturbanceName}
+                      {disturbance.name}
                     </h4>
-                    <Badge className={getSeverityColor(disturbance.severity)}>
-                      {disturbance.severity}
+                    <Badge className={getSeverityColor(disturbance.severityLevel)}>
+                      {getSeverityLabel(disturbance.severityLevel)}
                     </Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    {disturbance.description}
-                  </p>
+                  {disturbance.description && (
+                    <p className="text-sm text-muted-foreground mb-2">
+                      <span className="font-medium">Descripción:</span> {disturbance.description}
+                    </p>
+                  )}
                   <p className="text-xs text-muted-foreground">
-                    Diagnóstico:{' '}
-                    {new Date(disturbance.diagnosisDate).toLocaleDateString()}
+                    Inicio:{' '}
+                    {new Date(disturbance.onsetDate).toLocaleDateString()}
                   </p>
                 </div>
               ))}
@@ -193,13 +195,20 @@ export default function PatientDataView({ patientId }: PatientDataViewProps) {
               {records.symptons.map((sympton) => (
                 <div key={sympton.id} className="rounded-lg border p-4">
                   <div className="flex items-start justify-between mb-2">
-                    <h4 className="font-semibold">{sympton.symptonName}</h4>
-                    <Badge className={getSeverityColor(sympton.severity)}>
-                      {sympton.severity}
+                    <h4 className="font-semibold">
+                      {sympton.name}
+                    </h4>
+                    <Badge className={getSeverityColor(sympton.severityLevel)}>
+                      {getSeverityLabel(sympton.severityLevel)}
                     </Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    {sympton.description}
+                  {sympton.description && (
+                    <p className="text-sm text-muted-foreground mb-2">
+                      <span className="font-medium">Descripción:</span> {sympton.description}
+                    </p>
+                  )}
+                  <p className="text-sm text-muted-foreground mb-1">
+                    <span className="font-medium">Categoría:</span> {sympton.category}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     Inicio: {new Date(sympton.onsetDate).toLocaleDateString()}
@@ -229,18 +238,23 @@ export default function PatientDataView({ patientId }: PatientDataViewProps) {
               {records.treatments.map((treatment) => (
                 <div key={treatment.id} className="rounded-lg border p-4">
                   <div className="flex items-start justify-between mb-2">
-                    <h4 className="font-semibold">{treatment.treatmentName}</h4>
+                    <h4 className="font-semibold">
+                      {treatment.name}
+                    </h4>
                     <Badge
-                      variant={
-                        treatment.status === 'active' ? 'default' : 'secondary'
-                      }
+                      variant={treatment.isActive ? 'default' : 'secondary'}
                     >
-                      {treatment.status}
+                      {treatment.isActive ? 'Activo' : 'Inactivo'}
                     </Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    {treatment.description}
-                  </p>
+                  {treatment.description && (
+                    <p className="text-sm text-muted-foreground mb-2">
+                      <span className="font-medium">Descripción:</span> {treatment.description}
+                    </p>
+                  )}
+                  <div className="text-sm text-muted-foreground mb-2">
+                    <span className="font-medium">Dosis:</span> {treatment.dosage} | <span className="font-medium">Frecuencia:</span> {treatment.frequency}
+                  </div>
                   <div className="flex gap-4 text-xs text-muted-foreground">
                     <span>
                       Inicio: {new Date(treatment.startDate).toLocaleDateString()}

@@ -8,6 +8,7 @@ import {
   Users,
   Settings,
   History,
+  UserCircle,
 } from 'lucide-react';
 import {
   SidebarMenu,
@@ -16,8 +17,9 @@ import {
 } from '@/components/ui/sidebar';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { useUser } from '@/hooks/use-user';
 
-const links = [
+const defaultLinks = [
   { href: '/dashboard', label: 'Home', icon: LayoutDashboard },
   { href: '/vitals', label: 'Vitals', icon: HeartPulse },
   { href: '/emergencies', label: 'Emergencies', icon: Siren },
@@ -28,8 +30,20 @@ const links = [
   { href: '/settings/profile', label: 'Settings', icon: Settings },
 ];
 
+const caregiverLinks = [
+  { href: '/dashboard', label: 'Home', icon: LayoutDashboard },
+  { href: '/caregiver/patient', label: 'Datos del Paciente', icon: UserCircle },
+  { href: '/vitals', label: 'Vitals', icon: HeartPulse },
+  { href: '/emergencies', label: 'Emergencies', icon: Siren },
+  { href: '/settings/profile', label: 'Settings', icon: Settings },
+];
+
 export function SidebarNav() {
   const pathname = usePathname();
+  const { user } = useUser();
+  
+  const isCaregiver = user?.typeOfUser === 'CAREGIVER';
+  const links = isCaregiver ? caregiverLinks : defaultLinks;
 
   return (
     <div className="p-2">

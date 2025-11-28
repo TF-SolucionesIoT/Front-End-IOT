@@ -58,25 +58,38 @@ export async function registerCaregiver(
 export async function changePassword(
   data: ChangePasswordRequest
 ): Promise<void> {
-  // Este endpoint está en /me/change-password (sin /api prefix)
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:8080';
+  // Este endpoint está en /api/me/change-password
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
   const url = `${API_BASE}/me/change-password`;
   
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
   
+  console.log('🔐 Change Password Request:');
+  console.log('  URL:', url);
+  console.log('  Token present:', !!token);
+  console.log('  Token length:', token?.length);
+  console.log('  Body:', JSON.stringify(data));
+  
+  const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`,
+  };
+  
+  console.log('  Authorization header:', headers.Authorization ? headers.Authorization.substring(0, 50) + '...' : 'NO AUTH');
+  
   const response = await fetch(url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
+    headers,
     body: JSON.stringify(data),
   });
+
+  console.log('📡 Response Status:', response.status, response.statusText);
 
   if (!response.ok) {
     let errorMessage = 'Error al cambiar la contraseña';
     try {
       const errorData = await response.json();
+      console.error('❌ Error Data:', errorData);
       errorMessage = errorData.message || errorData.error || errorData.detail || errorMessage;
     } catch {
       errorMessage = response.statusText || errorMessage;
@@ -87,6 +100,7 @@ export async function changePassword(
     throw error;
   }
   
+  console.log('✅ Password changed successfully');
   // No hay contenido en la respuesta exitosa (204 No Content o similar)
   return;
 }

@@ -62,11 +62,15 @@ export default function AlterationsPage() {
       setIsLoading(true);
       const data = await disturbancesApi.getAll();
       setAlterations(data || []);
-    } catch (error) {
+    } catch (error: any) {
+      // Si es un 400 o 404, simplemente no hay datos - no es un error real
+      if (error?.status === 400 || error?.status === 404) {
+        setAlterations([]);
+        return;
+      }
+      // Solo loguear errores reales (no 400/404 por datos vacíos)
       console.error('Error loading alterations:', error);
-      // Solo mostrar error si no es un problema de datos vacíos
       setAlterations([]);
-      // No mostrar toast si es solo que no hay datos
     } finally {
       setIsLoading(false);
     }

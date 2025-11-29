@@ -6,13 +6,24 @@ import type { UserProfile } from '@/lib/api';
 
 /**
  * Obtiene el perfil del usuario desde localStorage de forma síncrona
+ * Valida que tenga los campos requeridos (patientId/caregiverId)
  */
 function getUserFromStorage(): UserProfile | null {
   if (typeof window !== 'undefined') {
     const stored = localStorage.getItem('user_profile');
     if (stored) {
       try {
-        return JSON.parse(stored) as UserProfile;
+        const profile = JSON.parse(stored) as UserProfile;
+        // Validar que el perfil tenga patientId o caregiverId según el tipo
+        if (profile.typeOfUser === 'PATIENT' && !profile.patientId) {
+          console.warn('⚠️ Perfil en localStorage no tiene patientId, se recargará del backend');
+          return null;
+        }
+        if (profile.typeOfUser === 'CAREGIVER' && !profile.caregiverId) {
+          console.warn('⚠️ Perfil en localStorage no tiene caregiverId, se recargará del backend');
+          return null;
+        }
+        return profile;
       } catch (e) {
         console.error('Error al parsear perfil guardado:', e);
         return null;

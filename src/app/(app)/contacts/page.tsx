@@ -9,7 +9,7 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card';
-import { Phone, Plus, Edit, Trash2 } from 'lucide-react';
+import { Phone, Plus, Edit, Trash2, Shuffle } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -32,6 +32,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { useUser } from '@/hooks/use-user';
 
 export default function ContactsPage() {
   const [contacts, setContacts] = useState<EmergencyContact[]>([]);
@@ -40,34 +41,56 @@ export default function ContactsPage() {
   const [editingContact, setEditingContact] = useState<EmergencyContact | null>(null);
   const [formData, setFormData] = useState({
     name: '',
-    phoneNumber: '',
+    phoneNumber: '9',
     connection: '',
   });
   const { toast } = useToast();
+  const { user, loading: userLoading } = useUser();
 
-  // Get current user's patientId from localStorage
-  const getCurrentPatientId = (): number => {
-    if (typeof window !== 'undefined') {
-      const userProfile = localStorage.getItem('user_profile');
-      if (userProfile) {
-        try {
-          const profile = JSON.parse(userProfile);
-          return profile.id || 1;
-        } catch (e) {
-          console.error('Error parsing user profile:', e);
-        }
-      }
+  // Generar número de teléfono aleatorio que empiece con 9
+  const generateRandomPhone = () => {
+    const randomDigits = Array.from({ length: 8 }, () => Math.floor(Math.random() * 10)).join('');
+    return '9' + randomDigits;
+  };
+
+  const handlePhoneChange = (value: string) => {
+    // Solo permitir números
+    let phoneValue = value.replace(/[^0-9]/g, '');
+    // Asegurar que siempre empiece con 9
+    if (!phoneValue.startsWith('9')) {
+      phoneValue = '9' + phoneValue.replace(/^9*/, '');
     }
-    return 1; // Default fallback
+    // Limitar a 9 dígitos
+    phoneValue = phoneValue.slice(0, 9);
+    setFormData({ ...formData, phoneNumber: phoneValue });
+  };
+
+  // Obtener patientId del usuario autenticado (desde el hook useUser que consulta al backend)
+  const getCurrentPatientId = (): number | null => {
+    if (user?.patientId) {
+      return user.patientId;
+    }
+    return null;
   };
 
   const loadContacts = async () => {
+    const patientId = getCurrentPatientId();
+    if (!patientId) {
+      // Usuario aún no cargado, esperar
+      return;
+    }
+    
     try {
       setLoading(true);
-      const patientId = getCurrentPatientId();
       const data = await getEmergencyContactsByPatient(patientId);
       setContacts(data);
-    } catch (error) {
+    } catch (error: any) {
+      // Si es un 400 o 404, simplemente no hay datos - no es un error real
+      if (error?.status === 400 || error?.status === 404) {
+        setContacts([]);
+        return;
+      }
+      // Solo loguear y mostrar toast para errores reales
       console.error('Error loading contacts:', error);
       toast({
         variant: 'destructive',
@@ -79,9 +102,21 @@ export default function ContactsPage() {
     }
   };
 
+  // Cargar contactos cuando el usuario esté disponible
   useEffect(() => {
-    loadContacts();
-  }, []);
+    if (!userLoading && user) {
+      console.log('👤 Usuario cargado:', { 
+        id: user.id, 
+        patientId: user.patientId, 
+        typeOfUser: user.typeOfUser 
+      });
+      if (user.patientId) {
+        loadContacts();
+      } else {
+        console.warn('⚠️ Usuario no tiene patientId. Verifica que el backend esté actualizado.');
+      }
+    }
+  }, [user, userLoading]);
 
   const handleOpenDialog = (contact?: EmergencyContact) => {
     if (contact) {
@@ -95,7 +130,7 @@ export default function ContactsPage() {
       setEditingContact(null);
       setFormData({
         name: '',
-        phoneNumber: '',
+        phoneNumber: '9',
         connection: '',
       });
     }
@@ -107,7 +142,7 @@ export default function ContactsPage() {
     setEditingContact(null);
     setFormData({
       name: '',
-      phoneNumber: '',
+      phoneNumber: '9',
       connection: '',
     });
   };
@@ -130,6 +165,14 @@ export default function ContactsPage() {
       } else {
         // Create new contact
         const patientId = getCurrentPatientId();
+        if (!patientId) {
+          toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'No se pudo obtener el ID del paciente. Por favor recarga la página.',
+          });
+          return;
+        }
         const newContact: CreateEmergencyContactRequest = {
           name: formData.name,
           phoneNumber: formData.phoneNumber,
@@ -243,17 +286,28 @@ export default function ContactsPage() {
                       />
                     </div>
                     <div className="grid gap-2">
-                      <Label htmlFor="phoneNumber">Phone Number</Label>
-                      <Input
-                        id="phoneNumber"
-                        type="tel"
-                        value={formData.phoneNumber}
-                        onChange={(e) =>
-                          setFormData({ ...formData, phoneNumber: e.target.value })
-                        }
-                        placeholder="Enter phone number"
-                        required
-                      />
+                      <Label htmlFor="phoneNumber">Phone Number <span className="text-xs text-muted-foreground">(9 dígitos)</span></Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="phoneNumber"
+                          type="tel"
+                          value={formData.phoneNumber}
+                          onChange={(e) => handlePhoneChange(e.target.value)}
+                          placeholder="912345678"
+                          required
+                          maxLength={9}
+                          className="flex-1"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setFormData({ ...formData, phoneNumber: generateRandomPhone() })}
+                          title="Generar número aleatorio"
+                        >
+                          <Shuffle className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                     <div className="grid gap-2">
                       <Label htmlFor="connection">Connection</Label>

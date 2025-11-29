@@ -50,13 +50,25 @@ export default function SignUpPage() {
 
   // Campos específicos de cuidador
   const [caregiverData, setCaregiverData] = useState({
-    phoneNumber: '',
+    phoneNumber: '9',
   });
 
   const handleCommonChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    
+    // Validar solo letras para nombre y apellido
+    if (id === 'firstName' || id === 'lastName') {
+      const onlyLetters = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
+      setCommonData({
+        ...commonData,
+        [id]: onlyLetters,
+      });
+      return;
+    }
+    
     setCommonData({
       ...commonData,
-      [e.target.id]: e.target.value,
+      [id]: value,
     });
   };
 
@@ -68,9 +80,27 @@ export default function SignUpPage() {
   };
 
   const handleCaregiverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    
+    // Validar teléfono: solo números, máximo 9 dígitos, siempre empieza con 9
+    if (id === 'phoneNumber') {
+      let phoneValue = value.replace(/[^0-9]/g, '');
+      // Asegurar que siempre empiece con 9
+      if (!phoneValue.startsWith('9')) {
+        phoneValue = '9' + phoneValue.replace(/^9*/, '');
+      }
+      // Limitar a 9 dígitos
+      phoneValue = phoneValue.slice(0, 9);
+      setCaregiverData({
+        ...caregiverData,
+        phoneNumber: phoneValue,
+      });
+      return;
+    }
+    
     setCaregiverData({
       ...caregiverData,
-      [e.target.id]: e.target.value,
+      [id]: value,
     });
   };
 
@@ -225,19 +255,17 @@ export default function SignUpPage() {
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="email">Email *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="juan@example.com"
-                    required
-                    value={commonData.email}
-                    onChange={handleCommonChange}
-                    disabled={isLoading}
-                  />
-                </div>
-
-                <div className="grid gap-2">
+                    <Label htmlFor="email">Email * <span className="text-xs text-muted-foreground">(debe incluir @)</span></Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="juan@example.com"
+                      required
+                      value={commonData.email}
+                      onChange={handleCommonChange}
+                      disabled={isLoading}
+                    />
+                  </div>                <div className="grid gap-2">
                   <Label htmlFor="gender">Sexo *</Label>
                   <Select
                     value={commonData.gender}
@@ -270,7 +298,7 @@ export default function SignUpPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="password">Contraseña *</Label>
+                    <Label htmlFor="password">Contraseña * <span className="text-xs text-muted-foreground">(mínimo 6 caracteres)</span></Label>
                     <Input
                       id="password"
                       type="password"
@@ -348,7 +376,7 @@ export default function SignUpPage() {
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="email">Email *</Label>
+                  <Label htmlFor="email">Email * <span className="text-xs text-muted-foreground">(debe incluir @)</span></Label>
                   <Input
                     id="email"
                     type="email"
@@ -393,7 +421,7 @@ export default function SignUpPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="password">Contraseña *</Label>
+                    <Label htmlFor="password">Contraseña * <span className="text-xs text-muted-foreground">(mínimo 6 caracteres)</span></Label>
                     <Input
                       id="password"
                       type="password"
@@ -420,15 +448,16 @@ export default function SignUpPage() {
 
                 {/* Campo específico de cuidador */}
                 <div className="grid gap-2">
-                  <Label htmlFor="phoneNumber">Número de teléfono *</Label>
+                  <Label htmlFor="phoneNumber">Número de teléfono * <span className="text-xs text-muted-foreground">(9 dígitos)</span></Label>
                   <Input
                     id="phoneNumber"
                     type="tel"
-                    placeholder="+1234567890"
+                    placeholder="912345678"
                     required
                     value={caregiverData.phoneNumber}
                     onChange={handleCaregiverChange}
                     disabled={isLoading}
+                    maxLength={9}
                   />
                 </div>
 

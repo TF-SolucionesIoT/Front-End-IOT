@@ -46,7 +46,7 @@ export async function createEmergencyContact(
 
     console.log('✅ Emergency contact created:', data);
 
-    // Sanity check: ensure backend created the contact for the same patientId we requested
+    // Validar que el backend creó el contacto para el paciente correcto
     if (typeof contact.patientId !== 'undefined' && typeof data.patientId !== 'undefined') {
       if (data.patientId !== contact.patientId) {
         console.error(

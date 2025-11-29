@@ -64,11 +64,15 @@ export default function SymptomsPage() {
       setIsLoading(true);
       const data = await symptomsApi.getAll();
       setSymptoms(data || []);
-    } catch (error) {
+    } catch (error: any) {
+      // Si es un 400 o 404, simplemente no hay datos - no es un error real
+      if (error?.status === 400 || error?.status === 404) {
+        setSymptoms([]);
+        return;
+      }
+      // Solo loguear errores reales (no 400/404 por datos vacíos)
       console.error('Error loading symptoms:', error);
-      // Solo mostrar error si no es un problema de datos vacíos
       setSymptoms([]);
-      // No mostrar toast si es solo que no hay datos
     } finally {
       setIsLoading(false);
     }

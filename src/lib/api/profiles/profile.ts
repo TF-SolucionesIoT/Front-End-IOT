@@ -25,6 +25,8 @@ export async function getCurrentUserProfile(): Promise<UserProfile> {
       phoneNumber: data.phoneNumber,
       birthday: data.birthday,
       typeOfUser: data.typeOfUser, // 'PATIENT' o 'CAREGIVER'
+      patientId: data.patientId,   // ID de la tabla patient
+      caregiverId: data.caregiverId, // ID de la tabla caregiver
     };
 
     // Guardar en localStorage para uso futuro

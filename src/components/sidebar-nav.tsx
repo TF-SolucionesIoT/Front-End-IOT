@@ -21,7 +21,7 @@ import { useUser } from '@/hooks/use-user';
 
 const defaultLinks = [
   { href: '/dashboard', label: 'Home', icon: LayoutDashboard },
-  { href: '/vitals', label: 'Vitals', icon: HeartPulse },
+  // { href: '/vitals', label: 'Vitals', icon: HeartPulse },
   { href: '/emergencies', label: 'Emergencies', icon: Siren },
   { href: '/treatments', label: 'Treatments', icon: Pill },
   { href: '/contacts', label: 'Contacts', icon: Users },
